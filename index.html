@@ -203,6 +203,10 @@ li.warn{list-style:none;margin-left:-18px}
 .exchip.on b{color:var(--gold-hi)}
 .exchip .fv{color:var(--gold)}
 .calc-opts{display:grid;gap:12px}
+.check{display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer;font-size:14px}
+.check input{width:20px;height:20px;accent-color:var(--gold);margin:0}
+.check em{font-style:normal;flex-basis:100%;margin-left:28px;margin-top:-4px}
+.toplogout{padding:6px 12px;white-space:nowrap}
 .st-cls .sline .date{white-space:nowrap;min-width:auto;font-size:13px}
 .staffedit .field{margin-top:12px}
 .calc-opts .field em{display:block;margin-top:6px}
@@ -738,13 +742,51 @@ function serverCfg() {
   }
   return SUPABASE_URL && SUPABASE_ANON_KEY ? { url: SUPABASE_URL, key: SUPABASE_ANON_KEY, builtIn: true } : null;
 }
+const REMEMBER_KEY = KEY + ".remember";
+const rememberOn = () => {
+  try {
+    return localStorage.getItem(REMEMBER_KEY) !== "0";
+  } catch (e) {
+    return true;
+  }
+};
+const setRemember = (on) => {
+  try {
+    localStorage.setItem(REMEMBER_KEY, on ? "1" : "0");
+  } catch (e) {
+  }
+};
+const authStore = {
+  getItem: (k) => {
+    try {
+      return (rememberOn() ? localStorage : sessionStorage).getItem(k);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem: (k, v) => {
+    try {
+      const on = rememberOn();
+      (on ? localStorage : sessionStorage).setItem(k, v);
+      (on ? sessionStorage : localStorage).removeItem(k);
+    } catch (e) {
+    }
+  },
+  removeItem: (k) => {
+    try {
+      localStorage.removeItem(k);
+      sessionStorage.removeItem(k);
+    } catch (e) {
+    }
+  }
+};
 let sbCache = null;
 function getSB(cfg) {
   if (!cfg || !window.supabase) return null;
   if (!sbCache || sbCache.url !== cfg.url || sbCache.key !== cfg.key) {
     let client = null;
     try {
-      client = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true, storageKey: KEY + ".auth" } });
+      client = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: true, autoRefreshToken: true, storageKey: KEY + ".auth", storage: authStore } });
     } catch (e) {
     }
     sbCache = { url: cfg.url, key: cfg.key, client };
@@ -900,6 +942,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
     const el = msg && document.getElementById("a-msg");
     if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [msg]);
+  const [remember, setRememberS] = useState(rememberOn);
   const submit = async (e) => {
     e.preventDefault();
     setMsg(null);
@@ -922,6 +965,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
       return;
     }
     setBusy(true);
+    setRemember(remember);
     try {
       if (tab === "in") {
         const { error } = await sb.auth.signInWithPassword({ email, password: f.pw });
@@ -948,7 +992,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
   return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT")))), /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "stack authwrap" }, /* @__PURE__ */ React.createElement(Card, { title: tab === "in" ? "\uB85C\uADF8\uC778" : "\uD68C\uC6D0\uAC00\uC785", right: /* @__PURE__ */ React.createElement(Seg, { value: tab, options: [["in", "\uB85C\uADF8\uC778"], ["up", "\uAC00\uC785"]], onChange: (v) => {
     setTab(v);
     setMsg(null);
-  }, small: true }) }, /* @__PURE__ */ React.createElement("form", { className: "form", onSubmit: submit, noValidate: true }, tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uB098\uB294" }, /* @__PURE__ */ React.createElement(Seg, { value: f.role, options: [["member", "\uD68C\uC6D0"], ["trainer", "\uD2B8\uB808\uC774\uB108"], ["admin", "\uAD00\uB9AC\uC790"]], onChange: (v) => set("role", v), small: true })), tab === "up" && f.role !== "member" && /* @__PURE__ */ React.createElement(Field, { label: `${ROLE_NAME[f.role]} \uAC00\uC785 \uCF54\uB4DC`, hint: "\uAD00\uB9AC\uC790 \uD654\uBA74\uC5D0 \uC788\uB294 \uCF54\uB4DC\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "a-code", value: f.code, onChange: (e) => set("code", e.target.value.toUpperCase()), autoCapitalize: "characters", autoComplete: "off" })), tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "a-name", value: f.name, onChange: (e) => set("name", e.target.value), autoComplete: "name" })), /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uBA54\uC77C" }, /* @__PURE__ */ React.createElement("input", { id: "a-email", type: "email", inputMode: "email", autoCapitalize: "off", autoCorrect: "off", spellCheck: "false", value: f.email, onChange: (e) => set("email", e.target.value), autoComplete: "email" })), /* @__PURE__ */ React.createElement(Field, { label: "\uBE44\uBC00\uBC88\uD638", hint: tab === "up" ? "6\uC790 \uC774\uC0C1" : "" }, /* @__PURE__ */ React.createElement("input", { id: "a-pw", type: "password", value: f.pw, onChange: (e) => set("pw", e.target.value), autoComplete: tab === "in" ? "current-password" : "new-password" })), msg && /* @__PURE__ */ React.createElement("p", { id: "a-msg", className: "small" + (msg.err ? " errtxt" : ""), role: "status" }, msg.t), /* @__PURE__ */ React.createElement("button", { className: "btn", type: "submit", disabled: busy }, busy ? "\uC7A0\uC2DC\uB9CC\uC694\u2026" : tab === "in" ? "\uB85C\uADF8\uC778" : "\uAC00\uC785\uD558\uAE30"))), /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uD68C\uC6D0 \uAE30\uB85D\uC744 \uBD05\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uB294 \uD68C\uC6D0\uC744 \uD2B8\uB808\uC774\uB108\uC5D0\uAC8C \uBC30\uC815\uD558\uACE0, \uD2B8\uB808\uC774\uB108\uB294 \uB9E1\uC740 \uD68C\uC6D0\uC758 \uC218\uC5C5\uC744 \uAE30\uB85D\uD558\uBA70, \uD68C\uC6D0\uC740 \uBC1B\uC740 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC790\uAE30 \uAE30\uB85D\uC5D0 \uC5F0\uACB0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row center" }, /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onLocal }, "\uB85C\uADF8\uC778 \uC5C6\uC774 \uC774 \uAE30\uAE30\uC5D0\uC11C\uB9CC \uC4F0\uAE30"), /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onSettings }, "\uC11C\uBC84 \uC124\uC815")))));
+  }, small: true }) }, /* @__PURE__ */ React.createElement("form", { className: "form", onSubmit: submit, noValidate: true }, tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uB098\uB294" }, /* @__PURE__ */ React.createElement(Seg, { value: f.role, options: [["member", "\uD68C\uC6D0"], ["trainer", "\uD2B8\uB808\uC774\uB108"], ["admin", "\uAD00\uB9AC\uC790"]], onChange: (v) => set("role", v), small: true })), tab === "up" && f.role !== "member" && /* @__PURE__ */ React.createElement(Field, { label: `${ROLE_NAME[f.role]} \uAC00\uC785 \uCF54\uB4DC`, hint: "\uAD00\uB9AC\uC790 \uD654\uBA74\uC5D0 \uC788\uB294 \uCF54\uB4DC\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "a-code", value: f.code, onChange: (e) => set("code", e.target.value.toUpperCase()), autoCapitalize: "characters", autoComplete: "off" })), tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "a-name", value: f.name, onChange: (e) => set("name", e.target.value), autoComplete: "name" })), /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uBA54\uC77C" }, /* @__PURE__ */ React.createElement("input", { id: "a-email", type: "email", inputMode: "email", autoCapitalize: "off", autoCorrect: "off", spellCheck: "false", value: f.email, onChange: (e) => set("email", e.target.value), autoComplete: "email" })), /* @__PURE__ */ React.createElement(Field, { label: "\uBE44\uBC00\uBC88\uD638", hint: tab === "up" ? "6\uC790 \uC774\uC0C1" : "" }, /* @__PURE__ */ React.createElement("input", { id: "a-pw", type: "password", value: f.pw, onChange: (e) => set("pw", e.target.value), autoComplete: tab === "in" ? "current-password" : "new-password" })), /* @__PURE__ */ React.createElement("label", { className: "check", htmlFor: "a-remember" }, /* @__PURE__ */ React.createElement("input", { id: "a-remember", type: "checkbox", checked: remember, onChange: (e) => setRememberS(e.target.checked) }), /* @__PURE__ */ React.createElement("span", null, "\uC790\uB3D9 \uB85C\uADF8\uC778"), /* @__PURE__ */ React.createElement("em", { className: "muted small" }, remember ? "\uC774 \uAE30\uAE30\uC5D0\uC11C \uB85C\uADF8\uC778 \uC0C1\uD0DC \uC720\uC9C0" : "\uBE0C\uB77C\uC6B0\uC800\uB97C \uB2EB\uC73C\uBA74 \uB85C\uADF8\uC544\uC6C3")), msg && /* @__PURE__ */ React.createElement("p", { id: "a-msg", className: "small" + (msg.err ? " errtxt" : ""), role: "status" }, msg.t), /* @__PURE__ */ React.createElement("button", { className: "btn", type: "submit", disabled: busy }, busy ? "\uC7A0\uC2DC\uB9CC\uC694\u2026" : tab === "in" ? "\uB85C\uADF8\uC778" : "\uAC00\uC785\uD558\uAE30"))), /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uD68C\uC6D0 \uAE30\uB85D\uC744 \uBD05\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uB294 \uD68C\uC6D0\uC744 \uD2B8\uB808\uC774\uB108\uC5D0\uAC8C \uBC30\uC815\uD558\uACE0, \uD2B8\uB808\uC774\uB108\uB294 \uB9E1\uC740 \uD68C\uC6D0\uC758 \uC218\uC5C5\uC744 \uAE30\uB85D\uD558\uBA70, \uD68C\uC6D0\uC740 \uBC1B\uC740 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC790\uAE30 \uAE30\uB85D\uC5D0 \uC5F0\uACB0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row center" }, /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onLocal }, "\uB85C\uADF8\uC778 \uC5C6\uC774 \uC774 \uAE30\uAE30\uC5D0\uC11C\uB9CC \uC4F0\uAE30"), /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onSettings }, "\uC11C\uBC84 \uC124\uC815")))));
 }
 function MemberStart() {
   const { srv, update } = useStore();
@@ -2034,7 +2078,7 @@ function App() {
     }
   };
   const dot = mode === "local" ? "" : sync.state === "error" ? " bad" : sync.state === "saving" || sync.state === "loading" ? " busy" : " ok";
-  return /* @__PURE__ */ React.createElement(Store.Provider, { value: ctx }, /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT"))), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "icon acct" + dot, "aria-label": "\uACC4\uC815\uACFC \uC800\uC7A5 \uC0C1\uD0DC", onClick: () => setAcct(true) }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS.member }))))), adding && role !== "member" && /* @__PURE__ */ React.createElement("div", { className: "addbar" }, /* @__PURE__ */ React.createElement("input", { id: "new-name", placeholder: "\uC0C8 \uD68C\uC6D0 \uC774\uB984", autoFocus: true, value: newName, onChange: (e) => setNewName(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addMember }, "\uCD94\uAC00"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => {
+  return /* @__PURE__ */ React.createElement(Store.Provider, { value: ctx }, /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT"))), /* @__PURE__ */ React.createElement("div", { className: "row" }, mode === "server" && /* @__PURE__ */ React.createElement("button", { className: "btn ghost small toplogout", id: "top-logout", onClick: logout }, "\uB85C\uADF8\uC544\uC6C3"), /* @__PURE__ */ React.createElement("button", { className: "icon acct" + dot, "aria-label": "\uACC4\uC815\uACFC \uC800\uC7A5 \uC0C1\uD0DC", onClick: () => setAcct(true) }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS.member }))))), adding && role !== "member" && /* @__PURE__ */ React.createElement("div", { className: "addbar" }, /* @__PURE__ */ React.createElement("input", { id: "new-name", placeholder: "\uC0C8 \uD68C\uC6D0 \uC774\uB984", autoFocus: true, value: newName, onChange: (e) => setNewName(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addMember }, "\uCD94\uAC00"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => {
     setAdding(false);
     setNewName("");
   } }, "\uCDE8\uC18C")), mode === "local" && /* @__PURE__ */ React.createElement("div", { className: "notice" }, "\uC9C0\uAE08\uC740 \uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uB824\uBA74 ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => cfg ? goLogin() : setAcct(true) }, cfg ? "\uB85C\uADF8\uC778" : "\uC11C\uBC84 \uC5F0\uACB0"), "\uD558\uC138\uC694.", db.sample && /* @__PURE__ */ React.createElement(React.Fragment, null, " \uC544\uB798\uB294 \uC608\uC2DC \uD68C\uC6D0 2\uBA85\uC758 \uC0D8\uD50C\uC785\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => setDB({ sample: false, activeId: null, members: [], measurements: [], sessions: [], exercises: db.exercises || DEFAULT_EXERCISES }) }, "\uBAA8\uB450 \uBE44\uC6B0\uAE30"))), mode === "server" && sync.state === "error" && /* @__PURE__ */ React.createElement("div", { className: "notice bad" }, sync.msg, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5")), /* @__PURE__ */ React.createElement("main", { className: "main" }, body(), /* @__PURE__ */ React.createElement("p", { className: "foot" }, "\uC774 \uC571\uC758 \uC218\uCE58\uB294 \uACF5\uC778 \uACF5\uC2DD\uC5D0 \uB530\uB978 \uCD94\uC815\uCE58\uC774\uBA70 \uC758\uB8CC\uC801 \uC9C4\uB2E8\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", id: "foot-refs", onClick: () => setRefs({ ids: null }) }, "\uADFC\uAC70\xB7\uB370\uC774\uD130 \uAD6C\uC870 \uBCF4\uAE30"), mode === "local" && /* @__PURE__ */ React.createElement(React.Fragment, null, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => {
