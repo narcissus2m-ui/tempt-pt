@@ -365,6 +365,10 @@ create table if not exists public.exercises (
   updated_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
+-- 운동 종류: gym(헬스) / pilates(필라테스). 필라테스 도구는 체어·바렐·리포머·캐딜락·매트
+alter table public.exercises add column if not exists category text not null default 'gym';
+alter table public.exercises drop constraint if exists exercises_category_check;
+alter table public.exercises add constraint exercises_category_check check (category in ('gym', 'pilates'));
 -- 기본 운동 (처음 한 번만 들어가고, 이후 수정·삭제한 내용은 그대로 둠)
 insert into public.exercises (id, name, muscles, muscles2, equipment) values
   ('bench', '벤치프레스', '{chest}', '{triceps,shoulders}', '바벨'),
@@ -385,6 +389,19 @@ insert into public.exercises (id, name, muscles, muscles2, equipment) values
   ('legcurl', '레그 컬', '{hamstrings}', '{}', '머신'),
   ('calf', '카프 레이즈', '{calves}', '{}', '머신'),
   ('cablecrunch', '케이블 크런치', '{abs}', '{}', '케이블')
+on conflict (id) do nothing;
+insert into public.exercises (id, name, category, muscles, muscles2, equipment) values
+  ('pi_footwork', '풋워크', 'pilates', '{quads,glutes}', '{calves}', '리포머'),
+  ('pi_hundred', '헌드레드', 'pilates', '{abs}', '{}', '매트'),
+  ('pi_rollup', '롤업', 'pilates', '{abs}', '{}', '매트'),
+  ('pi_elephant', '엘리펀트', 'pilates', '{hamstrings,abs}', '{}', '리포머'),
+  ('pi_longstretch', '롱 스트레치', 'pilates', '{abs,shoulders}', '{chest}', '리포머'),
+  ('pi_rolldown', '롤다운', 'pilates', '{abs}', '{back}', '캐딜락'),
+  ('pi_legspring', '레그 스프링', 'pilates', '{hamstrings,glutes}', '{abs}', '캐딜락'),
+  ('pi_pumpchair', '풋워크 (체어)', 'pilates', '{quads,glutes}', '{calves}', '체어'),
+  ('pi_swanchair', '스완 (체어)', 'pilates', '{back}', '{glutes}', '체어'),
+  ('pi_swanbarrel', '스완 (바렐)', 'pilates', '{back}', '{glutes}', '바렐'),
+  ('pi_sidestretch', '사이드 스트레치', 'pilates', '{abs}', '{}', '바렐')
 on conflict (id) do nothing;
 grant select, insert, update, delete on public.exercises to authenticated;
 alter table public.exercises enable row level security;
