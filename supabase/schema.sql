@@ -475,3 +475,47 @@ begin
 end $$;
 revoke all on function public.save_staff(uuid, text, text, text, text) from public, anon;
 grant execute on function public.save_staff(uuid, text, text, text, text) to authenticated;
+
+-- ───────── 12. 역할별 권한 정리 (관리자 · 강사 · 회원) ─────────
+-- 수업 기록: 관리자·강사는 접근 가능한 회원의 기록 모두. 회원은 보기만 하고, 자기가 남긴 개인 운동(선생님 없음)만 추가·수정·삭제
+drop policy if exists sessions_all on public.sessions;
+drop policy if exists sessions_select on public.sessions;
+create policy sessions_select on public.sessions for select to authenticated using (public.can_access_member(member_id));
+drop policy if exists sessions_insert on public.sessions;
+create policy sessions_insert on public.sessions for insert to authenticated with check (
+  public.can_access_member(member_id)
+  and (public.is_trainer() or (created_by = auth.uid() and coalesce(cardinality(trainer_ids), 0) = 0)));
+drop policy if exists sessions_update on public.sessions;
+create policy sessions_update on public.sessions for update to authenticated
+  using (public.can_access_member(member_id) and (public.is_trainer() or (created_by = auth.uid() and coalesce(cardinality(trainer_ids), 0) = 0)))
+  with check (public.can_access_member(member_id) and (public.is_trainer() or (created_by = auth.uid() and coalesce(cardinality(trainer_ids), 0) = 0)));
+drop policy if exists sessions_delete on public.sessions;
+create policy sessions_delete on public.sessions for delete to authenticated
+  using (public.can_access_member(member_id) and (public.is_trainer() or (created_by = auth.uid() and coalesce(cardinality(trainer_ids), 0) = 0)));
+
+-- 회원 정보의 선생님 메모(data.memo): 담당 선생님이 있는 회원은 본인이 바꿀 수 없음
+create or replace function public.keep_staff_memo() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_trainer()
+     and (new.trainer_id is not null or exists (select 1 from public.member_trainers t where t.member_id = new.id)) then
+    new.data := jsonb_set(coalesce(new.data, '{}'::jsonb), '{memo}', coalesce(old.data -> 'memo', '""'::jsonb));
+  end if;
+  return new;
+end $$;
+drop trigger if exists members_keep_staff_memo on public.members;
+create trigger members_keep_staff_memo before update on public.members for each row execute function public.keep_staff_memo();
+
+-- 운동 목록: 추가·수정·삭제와 시범 사진/영상은 관리자·강사만 (회원은 보기와 즐겨찾기)
+drop policy if exists exercises_insert on public.exercises;
+create policy exercises_insert on public.exercises for insert to authenticated with check (public.is_trainer() and created_by = auth.uid());
+drop policy if exists exercises_update on public.exercises;
+create policy exercises_update on public.exercises for update to authenticated using (public.is_trainer()) with check (public.is_trainer());
+drop policy if exists exercises_delete on public.exercises;
+create policy exercises_delete on public.exercises for delete to authenticated using (public.is_trainer());
+drop policy if exists exercise_media_insert on storage.objects;
+create policy exercise_media_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'session-media' and (storage.foldername(name))[1] = 'lib' and public.is_trainer());
+drop policy if exists exercise_media_delete on storage.objects;
+create policy exercise_media_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'session-media' and (storage.foldername(name))[1] = 'lib' and public.is_trainer());
