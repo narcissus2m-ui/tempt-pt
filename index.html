@@ -176,6 +176,14 @@ li.warn{list-style:none;margin-left:-18px}
 .notice.bad{color:#E58C82}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* admin-cal */
+.exrow{border-top:1px solid var(--line)}.exrow .mrow{border-top:0}
+.exrow.open{background:rgba(212,175,95,.05)}
+.exedit{padding:4px 4px 14px;display:grid;gap:10px}
+.exfilter{margin:6px 0}.exfilter select{width:auto;flex:1}
+.tag.eq{margin-left:6px;border-color:var(--gold-lo);color:var(--gold-hi)}
+.chip.tog:disabled{opacity:.35;cursor:not-allowed}
+.demo{border:1px dashed var(--gold-lo);border-radius:6px;padding:8px 10px;margin:8px 0}
+
 .btn.back{align-self:flex-start;margin-bottom:-4px}
 .card .mbrowser .search{margin-top:0}
 button.who{display:inline-flex;align-items:center;gap:4px;max-width:150px;min-width:0;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:6px;background:#0C0E10;color:inherit;font-size:15px;cursor:pointer}
@@ -292,33 +300,42 @@ const MUSCLES = {
   abs: { name: "\uBCF5\uADFC", size: "S" }
 };
 const BASE_RECOVERY_H = { L: 72, M: 60, S: 48 };
-const EXERCISES = [
-  { id: "bench", name: "\uBCA4\uCE58\uD504\uB808\uC2A4", p: ["chest"], s: ["triceps", "shoulders"] },
-  { id: "incline_db", name: "\uC778\uD074\uB77C\uC778 \uB364\uBCA8\uD504\uB808\uC2A4", p: ["chest"], s: ["shoulders", "triceps"] },
-  { id: "dip", name: "\uB525\uC2A4", p: ["chest", "triceps"], s: ["shoulders"] },
-  { id: "ohp", name: "\uC624\uBC84\uD5E4\uB4DC\uD504\uB808\uC2A4", p: ["shoulders"], s: ["triceps"] },
-  { id: "lateral", name: "\uC0AC\uC774\uB4DC \uB808\uD130\uB7F4 \uB808\uC774\uC988", p: ["shoulders"], s: [] },
-  { id: "pushdown", name: "\uD2B8\uB77C\uC774\uC149\uC2A4 \uD478\uC2DC\uB2E4\uC6B4", p: ["triceps"], s: [] },
-  { id: "deadlift", name: "\uB370\uB4DC\uB9AC\uD504\uD2B8", p: ["hamstrings", "glutes", "back"], s: ["quads"] },
-  { id: "row", name: "\uBC14\uBCA8 \uB85C\uC6B0", p: ["back"], s: ["biceps"] },
-  { id: "pullup", name: "\uD480\uC5C5", p: ["back"], s: ["biceps"] },
-  { id: "latpull", name: "\uB7AB\uD480\uB2E4\uC6B4", p: ["back"], s: ["biceps"] },
-  { id: "curl", name: "\uBC14\uBCA8 \uCEEC", p: ["biceps"], s: [] },
-  { id: "squat", name: "\uBC31\uC2A4\uCFFC\uD2B8", p: ["quads", "glutes"], s: ["hamstrings"] },
-  { id: "legpress", name: "\uB808\uADF8\uD504\uB808\uC2A4", p: ["quads"], s: ["glutes"] },
-  { id: "rdl", name: "\uB8E8\uB9C8\uB2C8\uC548 \uB370\uB4DC\uB9AC\uD504\uD2B8", p: ["hamstrings"], s: ["glutes", "back"] },
-  { id: "hipthrust", name: "\uD799 \uC4F0\uB7EC\uC2A4\uD2B8", p: ["glutes"], s: ["hamstrings"] },
-  { id: "legcurl", name: "\uB808\uADF8 \uCEEC", p: ["hamstrings"], s: [] },
-  { id: "calf", name: "\uCE74\uD504 \uB808\uC774\uC988", p: ["calves"], s: [] },
-  { id: "cablecrunch", name: "\uCF00\uC774\uBE14 \uD06C\uB7F0\uCE58", p: ["abs"], s: [] }
-];
-const EX = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
+const EQUIPMENT = ["\uBC14\uBCA8", "\uB364\uBCA8", "\uD50C\uB808\uC774\uD2B8", "\uCF00\uD2C0\uBCA8", "\uD074\uB7FD\uBCA8", "\uBA38\uC2E0", "\uCF00\uC774\uBE14", "\uB9E8\uBAB8", "\uBC34\uB4DC", "\uAE30\uD0C0"];
+const DEFAULT_EXERCISES = [
+  { id: "bench", name: "\uBCA4\uCE58\uD504\uB808\uC2A4", p: ["chest"], s: ["triceps", "shoulders"], eq: "\uBC14\uBCA8" },
+  { id: "incline_db", name: "\uC778\uD074\uB77C\uC778 \uB364\uBCA8\uD504\uB808\uC2A4", p: ["chest"], s: ["shoulders", "triceps"], eq: "\uB364\uBCA8" },
+  { id: "dip", name: "\uB525\uC2A4", p: ["chest", "triceps"], s: ["shoulders"], eq: "\uB9E8\uBAB8" },
+  { id: "ohp", name: "\uC624\uBC84\uD5E4\uB4DC\uD504\uB808\uC2A4", p: ["shoulders"], s: ["triceps"], eq: "\uBC14\uBCA8" },
+  { id: "lateral", name: "\uC0AC\uC774\uB4DC \uB808\uD130\uB7F4 \uB808\uC774\uC988", p: ["shoulders"], s: [], eq: "\uB364\uBCA8" },
+  { id: "pushdown", name: "\uD2B8\uB77C\uC774\uC149\uC2A4 \uD478\uC2DC\uB2E4\uC6B4", p: ["triceps"], s: [], eq: "\uCF00\uC774\uBE14" },
+  { id: "deadlift", name: "\uB370\uB4DC\uB9AC\uD504\uD2B8", p: ["hamstrings", "glutes", "back"], s: ["quads"], eq: "\uBC14\uBCA8" },
+  { id: "row", name: "\uBC14\uBCA8 \uB85C\uC6B0", p: ["back"], s: ["biceps"], eq: "\uBC14\uBCA8" },
+  { id: "pullup", name: "\uD480\uC5C5", p: ["back"], s: ["biceps"], eq: "\uB9E8\uBAB8" },
+  { id: "latpull", name: "\uB7AB\uD480\uB2E4\uC6B4", p: ["back"], s: ["biceps"], eq: "\uBA38\uC2E0" },
+  { id: "curl", name: "\uBC14\uBCA8 \uCEEC", p: ["biceps"], s: [], eq: "\uBC14\uBCA8" },
+  { id: "squat", name: "\uBC31\uC2A4\uCFFC\uD2B8", p: ["quads", "glutes"], s: ["hamstrings"], eq: "\uBC14\uBCA8" },
+  { id: "legpress", name: "\uB808\uADF8\uD504\uB808\uC2A4", p: ["quads"], s: ["glutes"], eq: "\uBA38\uC2E0" },
+  { id: "rdl", name: "\uB8E8\uB9C8\uB2C8\uC548 \uB370\uB4DC\uB9AC\uD504\uD2B8", p: ["hamstrings"], s: ["glutes", "back"], eq: "\uBC14\uBCA8" },
+  { id: "hipthrust", name: "\uD799 \uC4F0\uB7EC\uC2A4\uD2B8", p: ["glutes"], s: ["hamstrings"], eq: "\uBC14\uBCA8" },
+  { id: "legcurl", name: "\uB808\uADF8 \uCEEC", p: ["hamstrings"], s: [], eq: "\uBA38\uC2E0" },
+  { id: "calf", name: "\uCE74\uD504 \uB808\uC774\uC988", p: ["calves"], s: [], eq: "\uBA38\uC2E0" },
+  { id: "cablecrunch", name: "\uCF00\uC774\uBE14 \uD06C\uB7F0\uCE58", p: ["abs"], s: [], eq: "\uCF00\uC774\uBE14" }
+].map((e) => ({ ...e, note: "", media: [] }));
+let EX = Object.fromEntries(DEFAULT_EXERCISES.map((e) => [e.id, e]));
+const setCatalog = (list) => {
+  EX = Object.fromEntries((list || DEFAULT_EXERCISES).map((e) => [e.id, e]));
+};
 const exKey = (en) => en.exId ? en.exId : "c:" + (en.name || "").trim();
 const exName = (en) => {
   var _a;
-  return en.exId ? ((_a = EX[en.exId]) == null ? void 0 : _a.name) || en.exId : en.name || "\uC6B4\uB3D9";
+  return en.exId ? ((_a = EX[en.exId]) == null ? void 0 : _a.name) || en.name || "\uC0AD\uC81C\uB41C \uC6B4\uB3D9" : en.name || "\uC6B4\uB3D9";
 };
-const exDef = (en) => en.exId ? EX[en.exId] : en.muscle && MUSCLES[en.muscle] ? { p: [en.muscle], s: [] } : null;
+const exDef = (en) => {
+  const e = en.exId && EX[en.exId];
+  if (e) return e;
+  const p = (en.mus || (en.muscle ? [en.muscle] : [])).filter((k) => MUSCLES[k]);
+  return p.length ? { p, s: [] } : null;
+};
 const entryLabel = (e) => e.kind === "cardio" ? `${e.mode} ${e.minutes}\uBD84` : exName(e);
 const GOALS = {
   diet: { name: "\uB2E4\uC774\uC5B4\uD2B8", kcal: -0.2, protKg: 2.2, protLbm: 2.6, hr: "fatloss" },
@@ -592,6 +609,7 @@ function sampleDB() {
   const car = (mode, minutes, avgHR) => ({ kind: "cardio", mode, minutes, avgHR });
   return {
     sample: true,
+    exercises: DEFAULT_EXERCISES.map((e) => ({ ...e })),
     activeId: A,
     members: [
       { id: A, name: "\uAE40\uBBFC\uC900", sex: "M", birth: "1991-05-12", phone: "010-1234-5678", goal: "diet", restingHR: 62, hrFormula: "tanaka", zoneMethod: "karvonen", activityMode: "auto", activityManual: 1.55, meals: 4, memo: "\uD5C8\uB9AC \uB514\uC2A4\uD06C \uC774\uB825, \uB370\uB4DC\uB9AC\uD504\uD2B8 \uC911\uB7C9 \uC8FC\uC758" },
@@ -631,7 +649,11 @@ const Store = createContext(null);
 function loadDB() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const x = JSON.parse(raw);
+      if (!x.exercises) x.exercises = DEFAULT_EXERCISES.map((e) => ({ ...e }));
+      return x;
+    }
   } catch (e) {
   }
   return sampleDB();
@@ -714,12 +736,15 @@ const measRow = (x) => ({ id: x.id, member_id: x.memberId, date: x.date, height_
 const fromMeasRow = (r) => ({ id: r.id, memberId: r.member_id, date: String(r.date).slice(0, 10), heightCm: numOrNull(r.height_cm), weightKg: numOrNull(r.weight_kg), smmKg: numOrNull(r.smm_kg), bodyFatPct: numOrNull(r.body_fat_pct) });
 const sessRow = (s) => ({ id: s.id, member_id: s.memberId, date: s.date, time: s.time || null, entries: s.entries || [], trainer_ids: s.trainerIds || [], note: s.note || "" });
 const fromSessRow = (r) => ({ id: r.id, memberId: r.member_id, date: String(r.date).slice(0, 10), time: r.time || "", entries: r.entries || [], trainerIds: r.trainer_ids || [], note: r.note || "" });
-const mediaPaths = (sessions) => {
+const mediaPaths = (db) => {
   const out = /* @__PURE__ */ new Set();
-  (sessions || []).forEach((s) => (s.entries || []).forEach((e) => (e.media || []).forEach((x) => out.add(x.path))));
+  (db.sessions || []).forEach((s) => (s.entries || []).forEach((e) => (e.media || []).forEach((x) => out.add(x.path))));
+  (db.exercises || []).forEach((e) => (e.media || []).forEach((x) => out.add(x.path)));
   return out;
 };
-const TABLES = [["members", memberRow], ["measurements", measRow], ["sessions", sessRow]];
+const exRow = (e) => ({ id: e.id, name: e.name || "", muscles: e.p || [], muscles2: e.s || [], equipment: e.eq || "", note: e.note || "", media: e.media || [] });
+const fromExRow = (r) => ({ id: r.id, name: r.name, p: r.muscles || [], s: r.muscles2 || [], eq: r.equipment || "", note: r.note || "", media: r.media || [], by: r.created_by || null });
+const TABLES = [["members", memberRow], ["measurements", measRow], ["sessions", sessRow], ["exercises", exRow]];
 async function fetchAll(sb, table, order = ["created_at", "id"]) {
   const out = [];
   for (let from = 0; ; from += 1e3) {
@@ -734,12 +759,13 @@ async function fetchAll(sb, table, order = ["created_at", "id"]) {
   }
 }
 async function loadServer(sb, user) {
-  const [profs, mem, links, meas, sess] = await Promise.all([
+  const [profs, mem, links, meas, sess, exs] = await Promise.all([
     fetchAll(sb, "profiles", ["created_at", "id"]),
     fetchAll(sb, "members"),
     fetchAll(sb, "member_trainers", ["created_at", "member_id", "trainer_id"]),
     fetchAll(sb, "measurements"),
-    fetchAll(sb, "sessions")
+    fetchAll(sb, "sessions"),
+    fetchAll(sb, "exercises")
   ]);
   const meta = user.user_metadata || {};
   const profile = profs.find((p) => p.id === user.id) || { id: user.id, role: "member", display_name: meta.display_name || "" };
@@ -755,7 +781,8 @@ async function loadServer(sb, user) {
       activeId: (members.find((m) => m.id === saved) || members[0] || {}).id || null,
       members,
       measurements: meas.map(fromMeasRow),
-      sessions: sess.map(fromSessRow)
+      sessions: sess.map(fromSessRow),
+      exercises: exs.map(fromExRow)
     }
   };
 }
@@ -789,10 +816,10 @@ async function pushDiff(sb, diff, me) {
   const owner = me.role === "trainer" ? { trainer_id: me.id } : me.role === "admin" ? {} : { user_id: me.id };
   if (M.add.length) created = ok(await sb.from("members").upsert(M.add.map((r) => ({ ...r, ...owner })), { onConflict: "id", ignoreDuplicates: true }).select("id,invite_code,user_id,trainer_id")) || [];
   for (const r of M.change) ok(await sb.from("members").update({ name: r.name, data: r.data, updated_at: now() }).eq("id", r.id));
-  for (const t of ["measurements", "sessions"]) {
+  for (const t of ["exercises", "measurements", "sessions"]) {
     const D = diff[t];
     if (D.del.length) ok(await sb.from(t).delete().in("id", D.del));
-    const up = D.add.concat(D.change).map((r) => t === "sessions" ? { ...r, updated_at: now() } : r);
+    const up = D.add.concat(D.change).map((r) => t !== "measurements" ? { ...r, updated_at: now() } : r);
     if (up.length) ok(await sb.from(t).upsert(up, { onConflict: "id" }));
   }
   if (diff.removedMedia && diff.removedMedia.length) {
@@ -1158,7 +1185,7 @@ async function shrinkImage(file) {
   }
 }
 const MAX_FILE = 50 * 1024 * 1024;
-function MediaPicker({ memberId, onAdd, label = "\uC0AC\uC9C4\xB7\uC601\uC0C1 \uCCA8\uBD80" }) {
+function MediaPicker({ memberId, folder, onAdd, label = "\uC0AC\uC9C4\xB7\uC601\uC0C1 \uCCA8\uBD80" }) {
   const { srv } = useStore();
   const [busy, setBusy] = useState(0), [err, setErr] = useState("");
   const ref = useRef(null);
@@ -1176,7 +1203,7 @@ function MediaPicker({ memberId, onAdd, label = "\uC0AC\uC9C4\xB7\uC601\uC0C1 \u
         const f = video ? f0 : await shrinkImage(f0);
         if (f.size > MAX_FILE) throw new Error(`${f0.name}: 50MB \uC774\uD558\uB9CC \uC62C\uB9B4 \uC218 \uC788\uC5B4\uC694. \uC601\uC0C1\uC740 \uC9E7\uAC8C \uC790\uB974\uAC70\uB098 \uD654\uC9C8\uC744 \uB0AE\uCDB0 \uC8FC\uC138\uC694.`);
         const ext = (f.name.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5) || (video ? "mp4" : "jpg");
-        const path = `${memberId}/${uid()}.${ext}`;
+        const path = `${folder || memberId}/${uid()}.${ext}`;
         const { error } = await srv.sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || void 0, upsert: false });
         if (error) throw error;
         onAdd({ path, type: video ? "video" : "image", name: f0.name });
@@ -1196,11 +1223,12 @@ const dropFiles = (srv, paths) => {
 const setsText = (en) => en.sets.map((x) => `${x.w}\xD7${x.r}${x.rir != null && x.rir !== "" ? `@${x.rir}` : ""}`).join(", ");
 const sessWho = (staff, s) => (s.trainerIds || []).length ? staffNames(staff, s.trainerIds) + " \uC120\uC0DD\uB2D8\uACFC \uC218\uC5C5" : "\uAC1C\uC778 \uC6B4\uB3D9";
 function EntryLine({ en, d }) {
+  var _a;
   if (en.kind === "cardio") {
     const z = zoneForHR(d.zones, en.avgHR);
     return /* @__PURE__ */ React.createElement("p", { className: "small" }, en.mode, " ", en.minutes, "\uBD84 \xB7 \uD3C9\uADE0 ", en.avgHR, "bpm", z && /* @__PURE__ */ React.createElement(React.Fragment, null, " \xB7 ", /* @__PURE__ */ React.createElement("span", { className: "zt", style: { background: ZCOL[z - 1] } }, "Z", z)));
   }
-  return /* @__PURE__ */ React.createElement("p", { className: "small" }, /* @__PURE__ */ React.createElement("b", null, exName(en)), !en.exId && /* @__PURE__ */ React.createElement("span", { className: "muted" }, " (\uC9C1\uC811 \uC785\uB825", en.muscle && MUSCLES[en.muscle] ? ` \xB7 ${MUSCLES[en.muscle].name}` : "", ")"), " ", setsText(en));
+  return /* @__PURE__ */ React.createElement("p", { className: "small" }, /* @__PURE__ */ React.createElement("b", null, exName(en)), ((_a = EX[en.exId]) == null ? void 0 : _a.eq) && /* @__PURE__ */ React.createElement("span", { className: "muted" }, " \xB7 ", EX[en.exId].eq), " ", setsText(en));
 }
 function SessionDetail({ s, d }) {
   const { update, staff, srv } = useStore();
@@ -1262,6 +1290,82 @@ function CalendarView({ d, onAdd }) {
   })), /* @__PURE__ */ React.createElement("p", { className: "small muted legend" }, /* @__PURE__ */ React.createElement("span", { className: "cmark pt" }), " \uC120\uC0DD\uB2D8\uACFC \uC218\uC5C5 ", /* @__PURE__ */ React.createElement("span", { className: "cmark" }), " \uAC1C\uC778 \uC6B4\uB3D9 \xB7 \uC22B\uC790\uB294 \uADF8\uB0A0 \uC6B4\uB3D9 \uD69F\uC218, \uC544\uB798\uB294 \uC2DC\uC791 \uC2DC\uAC01")), /* @__PURE__ */ React.createElement(Card, { title: `${+sel.slice(5, 7)}\uC6D4 ${+sel.slice(8)}\uC77C ${WD[(/* @__PURE__ */ new Date(sel + "T00:00")).getDay()]}\uC694\uC77C`, right: /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: () => onAdd(sel) }, "\uC774 \uB0A0 \uAE30\uB85D\uD558\uAE30") }, list.length ? list.map((s) => /* @__PURE__ */ React.createElement(SessionDetail, { key: s.id, s, d })) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC774 \uB0A0\uC740 \uC6B4\uB3D9 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.")));
 }
 function ReviewView({ d }) {
+  const [view, setView] = useState("review");
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seg, { value: view, options: [["review", "\uAE30\uB85D \uBCF5\uAE30"], ["lib", "\uC6B4\uB3D9 \uBAA9\uB85D"]], onChange: setView, small: true }), view === "lib" ? /* @__PURE__ */ React.createElement(ExerciseLibrary, { d }) : /* @__PURE__ */ React.createElement(ReviewList, { d }));
+}
+const musNames = (ks) => (ks || []).map((k) => {
+  var _a;
+  return (_a = MUSCLES[k]) == null ? void 0 : _a.name;
+}).filter(Boolean).join("\xB7");
+function canEditEx(srv, e) {
+  return !srv || srv.profile.role !== "member" || e.by && e.by === srv.user.id;
+}
+function MusclePicks({ value, onChange, other = [] }) {
+  return /* @__PURE__ */ React.createElement("div", { className: "chips" }, Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      key: k,
+      type: "button",
+      className: "chip tog" + (value.includes(k) ? " on" : ""),
+      "aria-pressed": value.includes(k),
+      disabled: other.includes(k),
+      onClick: () => onChange(value.includes(k) ? value.filter((x) => x !== k) : [...value, k])
+    },
+    v.name
+  )));
+}
+function ExerciseEditor({ e, uses, onDone }) {
+  const { update, srv } = useStore();
+  const [ask, setAsk] = useState(false);
+  const set = (patch) => update((x) => {
+    x.exercises = x.exercises.map((y) => y.id === e.id ? { ...y, ...patch } : y);
+  });
+  const del = () => {
+    update((x) => {
+      x.exercises = x.exercises.filter((y) => y.id !== e.id);
+    });
+    onDone();
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "exedit", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ React.createElement(Field, { label: "\uC6B4\uB3D9 \uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "ex-name", value: e.name, onChange: (ev) => set({ name: ev.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC8FC \uBD80\uC704"), /* @__PURE__ */ React.createElement(MusclePicks, { value: e.p || [], other: e.s || [], onChange: (v) => set({ p: v }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uBCF4\uC870 \uBD80\uC704"), /* @__PURE__ */ React.createElement(MusclePicks, { value: e.s || [], other: e.p || [], onChange: (v) => set({ s: v }) }), /* @__PURE__ */ React.createElement("em", null, "\uC8FC \uBD80\uC704\uB294 \uC138\uD2B8 \uC218 \uADF8\uB300\uB85C, \uBCF4\uC870 \uBD80\uC704\uB294 \uC808\uBC18\uC73C\uB85C \uC8FC\uAC04 \uBCFC\uB968\xB7\uD68C\uBCF5\uC5D0 \uBC18\uC601\uB429\uB2C8\uB2E4")), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC6B4\uB3D9 \uB3C4\uAD6C"), /* @__PURE__ */ React.createElement("div", { className: "chips", id: "ex-eq" }, EQUIPMENT.map((q) => /* @__PURE__ */ React.createElement("button", { key: q, type: "button", className: "chip tog" + (e.eq === q ? " on" : ""), "aria-pressed": e.eq === q, onClick: () => set({ eq: e.eq === q ? "" : q }) }, q)))), /* @__PURE__ */ React.createElement(Field, { label: "\uC790\uC138 \uD3EC\uC778\uD2B8 \xB7 \uC124\uBA85" }, /* @__PURE__ */ React.createElement("textarea", { id: "ex-note", rows: "2", placeholder: "\uC608: \uACAC\uAC11\uC744 \uBAA8\uC73C\uACE0 \uBC14\uB97C \uAC00\uC2B4 \uC544\uB798\uCABD\uC73C\uB85C", value: e.note || "", onChange: (ev) => set({ note: ev.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC2DC\uBC94 \uC0AC\uC9C4 \xB7 \uC601\uC0C1"), /* @__PURE__ */ React.createElement(MediaThumbs, { items: e.media, onRemove: (i) => set({ media: e.media.filter((_, j) => j !== i) }) }), /* @__PURE__ */ React.createElement(MediaPicker, { folder: "lib/" + e.id, onAdd: (it) => update((x) => {
+    x.exercises = x.exercises.map((y) => y.id === e.id ? { ...y, media: [...y.media || [], it] } : y);
+  }) })), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: onDone }, "\uC644\uB8CC"), !ask ? /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(true) }, "\uC774 \uC6B4\uB3D9 \uC0AD\uC81C") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "small" }, uses ? `\uC9C0\uB09C \uAE30\uB85D ${uses}\uD68C\uB294 \uADF8\uB300\uB85C \uB0A8\uACE0, ` : "", "\uBAA9\uB85D\uC5D0\uC11C\uB9CC \uBE60\uC9D1\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("button", { className: "btn danger small", onClick: del }, "\uC0AD\uC81C"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(false) }, "\uCDE8\uC18C"))), srv && /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uACE0\uCE5C \uB0B4\uC6A9\uC740 \uBC14\uB85C \uC800\uC7A5\uB418\uACE0, \uBAA8\uB4E0 \uC120\uC0DD\uB2D8\xB7\uD68C\uC6D0\uC758 \uC6B4\uB3D9 \uBAA9\uB85D\uC5D0 \uAC19\uC774 \uBC18\uC601\uB429\uB2C8\uB2E4."));
+}
+function ExerciseLibrary({ d }) {
+  const { db, update, srv } = useStore();
+  const [name, setName] = useState(""), [q, setQ] = useState(""), [eq, setEq] = useState(""), [mus, setMus] = useState(""), [open, setOpen] = useState(null);
+  const uses = useMemo(() => {
+    const o = {};
+    db.sessions.forEach((s) => s.entries.forEach((en) => {
+      if (en.exId) o[en.exId] = (o[en.exId] || 0) + 1;
+    }));
+    return o;
+  }, [db.sessions]);
+  const all = db.exercises || [];
+  const list = sortMembers(all.filter((e) => (!q.trim() || e.name.toLowerCase().includes(q.trim().toLowerCase())) && (!eq || e.eq === eq) && (!mus || (e.p || []).includes(mus) || (e.s || []).includes(mus))));
+  const add = () => {
+    const nm = name.trim();
+    if (!nm) return;
+    const dup = all.find((e) => e.name.replace(/\s/g, "") === nm.replace(/\s/g, ""));
+    if (dup) {
+      setOpen(dup.id);
+      setName("");
+      setQ("");
+      return;
+    }
+    const id = "x" + uid();
+    update((x) => {
+      x.exercises = [...x.exercises || [], { id, name: nm, p: [], s: [], eq: "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null }];
+    });
+    setName("");
+    setQ("");
+    setOpen(id);
+  };
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: "\uC6B4\uB3D9 \uCD94\uAC00" }, /* @__PURE__ */ React.createElement("div", { className: "addbar flat" }, /* @__PURE__ */ React.createElement("input", { id: "ex-new", placeholder: "\uC6B4\uB3D9 \uC774\uB984\uB9CC \uC368\uB3C4 \uCD94\uAC00\uB3FC\uC694 (\uC608: \uCF00\uD2C0\uBCA8 \uC2A4\uC719)", value: name, onChange: (e) => setName(e.target.value), onKeyDown: (e) => e.key === "Enter" && add() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: add, disabled: !name.trim() }, "\uCD94\uAC00")), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uCD94\uAC00\uD55C \uB4A4 \uBD80\uC704\xB7\uB3C4\uAD6C\xB7\uC124\uBA85\xB7\uC2DC\uBC94 \uC601\uC0C1\uC740 \uC544\uB798\uC5D0\uC11C \uC5B8\uC81C\uB4E0 \uCC44\uC6B8 \uC218 \uC788\uC5B4\uC694. \uAC19\uC740 \uC774\uB984\uC774 \uC774\uBBF8 \uC788\uC73C\uBA74 \uADF8 \uC6B4\uB3D9\uC744 \uC5F4\uC5B4 \uC90D\uB2C8\uB2E4.")), /* @__PURE__ */ React.createElement(Card, { title: `\uC6B4\uB3D9 \uBAA9\uB85D \xB7 ${all.length}\uAC1C` }, /* @__PURE__ */ React.createElement("input", { id: "ex-q", className: "search", type: "search", placeholder: "\uC6B4\uB3D9 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), /* @__PURE__ */ React.createElement("div", { className: "row wrap exfilter" }, /* @__PURE__ */ React.createElement("select", { id: "ex-fmus", value: mus, onChange: (e) => setMus(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uBD80\uC704"), Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.name))), /* @__PURE__ */ React.createElement("select", { id: "ex-feq", value: eq, onChange: (e) => setEq(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uB3C4\uAD6C"), EQUIPMENT.map((x) => /* @__PURE__ */ React.createElement("option", { key: x }, x)))), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uC870\uAC74\uC5D0 \uB9DE\uB294 \uC6B4\uB3D9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("ul", { className: "mlist" }, list.map((e) => {
+    const isOpen = open === e.id, can = canEditEx(srv, e);
+    return /* @__PURE__ */ React.createElement("li", { key: e.id, className: "exrow" + (isOpen ? " open" : ""), "data-ex": e.name }, /* @__PURE__ */ React.createElement("button", { className: "mrow", onClick: () => setOpen(isOpen ? null : e.id), "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement("span", { className: "mname" }, e.name), /* @__PURE__ */ React.createElement("span", { className: "muted small mlast" }, uses[e.id] ? `\uAE30\uB85D ${uses[e.id]}\uD68C` : "", (e.media || []).length ? ` \xB7 \uC601\uC0C1/\uC0AC\uC9C4 ${(e.media || []).length}` : ""), /* @__PURE__ */ React.createElement("span", { className: "muted small" }, musNames(e.p) || "\uBD80\uC704 \uBBF8\uC815", (e.s || []).length ? ` (+${musNames(e.s)})` : "", e.eq ? /* @__PURE__ */ React.createElement("span", { className: "tag eq" }, e.eq) : null)), isOpen && (can ? /* @__PURE__ */ React.createElement(ExerciseEditor, { e, uses: uses[e.id] || 0, onDone: () => setOpen(null) }) : /* @__PURE__ */ React.createElement("div", { className: "exedit" }, e.note && /* @__PURE__ */ React.createElement("p", { className: "note" }, e.note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: e.media }), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC13C\uD130 \uC6B4\uB3D9 \uBAA9\uB85D\uC740 \uC120\uC0DD\uB2D8\uC774 \uACE0\uCE60 \uC218 \uC788\uC5B4\uC694."))));
+  }))));
+}
+function ReviewList({ d }) {
   const { staff } = useStore();
   const [q, setQ] = useState(""), [onlyMedia, setOnlyMedia] = useState(false), [open, setOpen] = useState(null);
   const lib = useMemo(() => {
@@ -1280,7 +1384,7 @@ function ReviewView({ d }) {
   return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: "\uC6B4\uB3D9 \uBCF5\uAE30", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, lib.length, "\uC885\uBAA9") }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC218\uC5C5\uC5D0\uC11C \uBC30\uC6B4 \uC6B4\uB3D9\uC744 \uC885\uBAA9\uBCC4\uB85C \uBAA8\uC558\uC2B5\uB2C8\uB2E4. \uD63C\uC790 \uC6B4\uB3D9\uD560 \uB54C \uC9C0\uB09C \uC138\uD2B8\uC640 \uC120\uC0DD\uB2D8 \uBA54\uBAA8, \uC0AC\uC9C4\xB7\uC601\uC0C1\uC744 \uB2E4\uC2DC \uBCF4\uC138\uC694."), /* @__PURE__ */ React.createElement("div", { className: "row wrap" }, /* @__PURE__ */ React.createElement("input", { id: "rv-q", className: "grow", placeholder: "\uC6B4\uB3D9 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), /* @__PURE__ */ React.createElement("button", { className: "chip tog" + (onlyMedia ? " on" : ""), "aria-pressed": onlyMedia, onClick: () => setOnlyMedia(!onlyMedia) }, "\uC0AC\uC9C4\xB7\uC601\uC0C1 \uC788\uB294 \uAC83\uB9CC"))), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uC870\uAC74\uC5D0 \uB9DE\uB294 \uC6B4\uB3D9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."), list.map((it) => {
     const last = it.items[0];
     const isOpen = open === it.k;
-    return /* @__PURE__ */ React.createElement(Card, { key: it.k, title: it.name, onClick: isOpen ? void 0 : () => setOpen(it.k), right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, it.items.length, "\uD68C", it.media ? ` \xB7 \uCCA8\uBD80 ${it.media}` : "") }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uCD5C\uADFC ", last.s.date.slice(5).replace("-", "."), " \xB7 ", sessWho(staff, last.s), it.custom && /* @__PURE__ */ React.createElement("span", { className: "muted" }, " \xB7 \uC9C1\uC811 \uC785\uB825")), !it.cardio && /* @__PURE__ */ React.createElement("p", { className: "small muted" }, setsText(last.en)), !isOpen ? /* @__PURE__ */ React.createElement(MediaThumbs, { items: (last.en.media || []).slice(0, 4) }) : /* @__PURE__ */ React.createElement("div", { className: "rv-list" }, it.items.map(({ s, en }) => /* @__PURE__ */ React.createElement("div", { key: s.id + en.id, className: "rv-i" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, /* @__PURE__ */ React.createElement("b", null, s.date.replace(/-/g, "."), " ", s.time), " \xB7 ", sessWho(staff, s)), /* @__PURE__ */ React.createElement(EntryLine, { en, d }), s.note && /* @__PURE__ */ React.createElement("p", { className: "note" }, s.note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: en.media }))), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setOpen(null) }, "\uC811\uAE30")));
+    return /* @__PURE__ */ React.createElement(Card, { key: it.k, title: it.name, onClick: isOpen ? void 0 : () => setOpen(it.k), right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, it.items.length, "\uD68C", it.media ? ` \xB7 \uCCA8\uBD80 ${it.media}` : "") }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uCD5C\uADFC ", last.s.date.slice(5).replace("-", "."), " \xB7 ", sessWho(staff, last.s), it.custom && /* @__PURE__ */ React.createElement("span", { className: "muted" }, " \xB7 \uC9C1\uC811 \uC785\uB825")), !it.cardio && /* @__PURE__ */ React.createElement("p", { className: "small muted" }, setsText(last.en)), isOpen && EX[it.k] && (EX[it.k].note || (EX[it.k].media || []).length > 0) && /* @__PURE__ */ React.createElement("div", { className: "demo" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, /* @__PURE__ */ React.createElement("b", null, "\uC6B4\uB3D9 \uBAA9\uB85D\uC758 \uC124\uBA85\xB7\uC2DC\uBC94"), EX[it.k].eq ? ` \xB7 ${EX[it.k].eq}` : ""), EX[it.k].note && /* @__PURE__ */ React.createElement("p", { className: "note" }, EX[it.k].note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: EX[it.k].media })), !isOpen ? /* @__PURE__ */ React.createElement(MediaThumbs, { items: (last.en.media || []).slice(0, 4) }) : /* @__PURE__ */ React.createElement("div", { className: "rv-list" }, it.items.map(({ s, en }) => /* @__PURE__ */ React.createElement("div", { key: s.id + en.id, className: "rv-i" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, /* @__PURE__ */ React.createElement("b", null, s.date.replace(/-/g, "."), " ", s.time), " \xB7 ", sessWho(staff, s)), /* @__PURE__ */ React.createElement(EntryLine, { en, d }), s.note && /* @__PURE__ */ React.createElement("p", { className: "note" }, s.note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: en.media }))), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setOpen(null) }, "\uC811\uAE30")));
   }));
 }
 function LogView({ d, preset, clearPreset }) {
@@ -1297,31 +1401,34 @@ function LogView({ d, preset, clearPreset }) {
     }
   }, [preset]);
   const [exId, setExId] = useState("bench");
-  const [custom, setCustom] = useState({ name: "", muscle: "" });
+  const [custom, setCustom] = useState({ name: "", muscle: "", eq: "" });
+  const { db } = useStore();
+  const groups = useMemo(() => {
+    const g = {};
+    sortMembers(db.exercises || []).forEach((e) => (g[e.eq || "\uAE30\uD0C0\xB7\uBBF8\uC815"] = g[e.eq || "\uAE30\uD0C0\xB7\uBBF8\uC815"] || []).push(e));
+    return [...EQUIPMENT, "\uAE30\uD0C0\xB7\uBBF8\uC815"].filter((k) => g[k]).map((k) => [k, g[k]]);
+  }, [db.exercises]);
   const [mode, setMode] = useState("strength");
   const [cardio, setCardio] = useState({ mode: "\uB7EC\uB2DD", minutes: 30, avgHR: "" });
-  const customs = useMemo(() => {
-    const m = /* @__PURE__ */ new Map();
-    d.sessions.forEach((s) => s.entries.forEach((e) => {
-      if (e.kind === "strength" && !e.exId && e.name && !m.has(e.name.trim())) m.set(e.name.trim(), e.muscle || "");
-    }));
-    return [...m];
-  }, [d.sessions]);
   const addEx = () => {
-    let base;
+    let ex;
     if (exId === "__new") {
-      if (!custom.name.trim()) return;
-      base = { name: custom.name.trim(), muscle: custom.muscle || "" };
-    } else if (exId.startsWith("c:")) {
-      const nm = exId.slice(2);
-      base = { name: nm, muscle: (customs.find(([n]) => n === nm) || [])[1] || "" };
-    } else base = { exId };
-    const b = d.best[exKey(base)];
-    setDraft((x) => ({ ...x, entries: [...x.entries, { id: uid(), kind: "strength", ...base, sets: [{ w: b ? roundTo(b.w, 2.5) : base.exId ? 20 : 0, r: 10, rir: 2 }], media: [] }] }));
-    if (exId === "__new") {
-      setCustom({ name: "", muscle: "" });
-      setExId("c:" + base.name);
-    }
+      const nm = custom.name.trim();
+      if (!nm) return;
+      ex = (db.exercises || []).find((e) => e.name.replace(/\s/g, "") === nm.replace(/\s/g, ""));
+      if (!ex) {
+        ex = { id: "x" + uid(), name: nm, p: custom.muscle ? [custom.muscle] : [], s: [], eq: custom.eq || "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null };
+        const nx = ex;
+        update((x) => {
+          x.exercises = [...x.exercises || [], nx];
+        });
+      }
+      setCustom({ name: "", muscle: "", eq: "" });
+      setExId(ex.id);
+    } else ex = EX[exId];
+    if (!ex) return;
+    const b = d.best[ex.id];
+    setDraft((x) => ({ ...x, entries: [...x.entries, { id: uid(), kind: "strength", exId: ex.id, name: ex.name, mus: ex.p || [], sets: [{ w: b ? roundTo(b.w, 2.5) : ex.eq === "\uB9E8\uBAB8" ? 0 : 20, r: 10, rir: 2 }], media: [] }] }));
   };
   const addCardio = () => {
     if (!cardio.avgHR) return;
@@ -1346,7 +1453,7 @@ function LogView({ d, preset, clearPreset }) {
     dropFiles(srv, [en.media[i].path]);
     setEntry(en.id, (x) => ({ ...x, media: x.media.filter((_, j) => j !== i) }));
   } }), /* @__PURE__ */ React.createElement(MediaPicker, { memberId: d.m.id, onAdd: (it) => setEntry(en.id, (x) => ({ ...x, media: [...x.media || [], it] })) }));
-  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: "\uC0C8 \uC6B4\uB3D9 \uAE30\uB85D" }, /* @__PURE__ */ React.createElement("div", { className: "form cols" }, /* @__PURE__ */ React.createElement(Field, { label: "\uB0A0\uC9DC" }, /* @__PURE__ */ React.createElement("input", { id: "s-date", type: "date", value: draft.date, onChange: (e) => setDraft({ ...draft, date: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uC2DC\uC791 \uC2DC\uAC01", hint: "\uCE98\uB9B0\uB354\uC640 \uD68C\uBCF5 \uC2DC\uAC04 \uACC4\uC0B0\uC5D0 \uC0AC\uC6A9" }, /* @__PURE__ */ React.createElement("input", { id: "s-time", type: "time", value: draft.time, onChange: (e) => setDraft({ ...draft, time: e.target.value }) }))), tCands.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC218\uC5C5\uD55C \uC120\uC0DD\uB2D8"), /* @__PURE__ */ React.createElement("div", { className: "chips", id: "s-trainers" }, tCands.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, type: "button", className: "chip tog" + (draft.trainerIds.includes(t.id) ? " on" : ""), "aria-pressed": draft.trainerIds.includes(t.id), onClick: () => toggleT(t.id) }, t.name))), /* @__PURE__ */ React.createElement("em", null, draft.trainerIds.filter((id) => tCands.some((t) => t.id === id)).length ? "\uACE0\uB978 \uC120\uC0DD\uB2D8\uACFC\uC758 \uC218\uC5C5\uC73C\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4" : "\uC544\uBB34\uB3C4 \uACE0\uB974\uC9C0 \uC54A\uC73C\uBA74 \uAC1C\uC778 \uC6B4\uB3D9\uC73C\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4")), /* @__PURE__ */ React.createElement(Field, { label: "\uC218\uC5C5 \uB0B4\uC6A9 \xB7 \uBA54\uBAA8" }, /* @__PURE__ */ React.createElement("textarea", { id: "s-note", rows: "2", placeholder: "\uC608: \uD799\uD78C\uC9C0 \uD328\uD134 \uAD50\uC815, \uB2E4\uC74C \uC2DC\uAC04 \uB370\uB4DC\uB9AC\uD504\uD2B8 \uC9C4\uB3C4", value: draft.note, onChange: (e) => setDraft({ ...draft, note: e.target.value }) })), /* @__PURE__ */ React.createElement(Seg, { value: mode, options: [["strength", "\uADFC\uB825"], ["cardio", "\uC720\uC0B0\uC18C"]], onChange: setMode, small: true }), mode === "strength" ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { className: "row wrap" }, /* @__PURE__ */ React.createElement("select", { id: "s-ex", value: exId, onChange: (e) => setExId(e.target.value), className: "grow" }, /* @__PURE__ */ React.createElement("optgroup", { label: "\uAE30\uBCF8 \uC6B4\uB3D9" }, EXERCISES.map((e) => /* @__PURE__ */ React.createElement("option", { key: e.id, value: e.id }, e.name))), customs.length > 0 && /* @__PURE__ */ React.createElement("optgroup", { label: "\uC9C1\uC811 \uCD94\uAC00\uD55C \uC6B4\uB3D9" }, customs.map(([n]) => /* @__PURE__ */ React.createElement("option", { key: n, value: "c:" + n }, n))), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "+ \uC9C1\uC811 \uC785\uB825\u2026")), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addEx, disabled: exId === "__new" && !custom.name.trim() }, "\uC885\uBAA9 \uCD94\uAC00")), exId === "__new" && /* @__PURE__ */ React.createElement("div", { className: "form cols", style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement(Field, { label: "\uC6B4\uB3D9 \uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "s-custom", placeholder: "\uC608: \uCF00\uD2C0\uBCA8 \uC2A4\uC719", value: custom.name, onChange: (e) => setCustom({ ...custom, name: e.target.value }), onKeyDown: (e) => e.key === "Enter" && addEx() })), /* @__PURE__ */ React.createElement(Field, { label: "\uC8FC\uB85C \uC4F0\uB294 \uBD80\uC704", hint: "\uACE0\uB974\uBA74 \uD68C\uBCF5\xB7\uC8FC\uAC04 \uBCFC\uB968\uC5D0\uB3C4 \uBC18\uC601" }, /* @__PURE__ */ React.createElement("select", { id: "s-muscle", value: custom.muscle, onChange: (e) => setCustom({ ...custom, muscle: e.target.value }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uC120\uD0DD \uC548 \uD568"), Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.name)))))) : /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { className: "form cols" }, /* @__PURE__ */ React.createElement(Field, { label: "\uC885\uB958" }, /* @__PURE__ */ React.createElement("input", { id: "c-mode", value: cardio.mode, onChange: (e) => setCardio({ ...cardio, mode: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uC2DC\uAC04 (\uBD84)" }, /* @__PURE__ */ React.createElement("input", { id: "c-min", type: "number", inputMode: "numeric", value: cardio.minutes, onChange: (e) => setCardio({ ...cardio, minutes: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uD3C9\uADE0 \uC2EC\uBC15", hint: cz ? `\u2192 Zone ${cz} \uB85C \uC790\uB3D9 \uBD84\uB958` : "\uC2EC\uBC15 \uD0ED\uC758 \uC874 \uAE30\uC900 \uC801\uC6A9" }, /* @__PURE__ */ React.createElement("input", { id: "c-hr", type: "number", inputMode: "numeric", value: cardio.avgHR, onChange: (e) => setCardio({ ...cardio, avgHR: e.target.value }) }))), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addCardio, disabled: !cardio.avgHR }, "\uC720\uC0B0\uC18C \uCD94\uAC00")), draft.entries.map((en) => en.kind === "cardio" ? /* @__PURE__ */ React.createElement("div", { key: en.id, className: "entry" }, /* @__PURE__ */ React.createElement("div", { className: "entry-h" }, /* @__PURE__ */ React.createElement("b", null, en.mode), /* @__PURE__ */ React.createElement("span", { className: "muted small" }, en.minutes, "\uBD84 \xB7 ", en.avgHR, "bpm \xB7 Z", zoneForHR(d.zones, en.avgHR) || "?"), /* @__PURE__ */ React.createElement("button", { className: "x", "aria-label": "\uC885\uBAA9 \uBE7C\uAE30", onClick: () => dropEntry(en) }, "\xD7")), mediaRow(en)) : /* @__PURE__ */ React.createElement("div", { key: en.id, className: "entry" }, /* @__PURE__ */ React.createElement("div", { className: "entry-h" }, /* @__PURE__ */ React.createElement("b", null, exName(en)), d.best[exKey(en)] && /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uCD94\uC815 1RM ", fmt(d.best[exKey(en)].e1rm, 1), "kg"), /* @__PURE__ */ React.createElement("button", { className: "x", "aria-label": "\uC885\uBAA9 \uBE7C\uAE30", onClick: () => dropEntry(en) }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "sets-h" }, /* @__PURE__ */ React.createElement("span", null, "\uC138\uD2B8"), /* @__PURE__ */ React.createElement("span", null, "kg"), /* @__PURE__ */ React.createElement("span", null, "\uD68C"), /* @__PURE__ */ React.createElement("span", null, "RIR"), /* @__PURE__ */ React.createElement("span", null)), en.sets.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "sets" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, i + 1), /* @__PURE__ */ React.createElement("input", { type: "number", inputMode: "decimal", value: s.w, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, w: e.target.value } : y) })) }), /* @__PURE__ */ React.createElement("input", { type: "number", inputMode: "numeric", value: s.r, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, r: e.target.value } : y) })) }), /* @__PURE__ */ React.createElement("select", { value: s.rir, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, rir: +e.target.value } : y) })) }, [0, 1, 2, 3, 4, 5].map((v) => /* @__PURE__ */ React.createElement("option", { key: v, value: v }, v))), /* @__PURE__ */ React.createElement("button", { className: "x", onClick: () => setEntry(en.id, (x) => ({ ...x, sets: x.sets.filter((_, j) => j !== i) })) }, "\xD7"))), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setEntry(en.id, (x) => ({ ...x, sets: [...x.sets, { ...x.sets[x.sets.length - 1] || { w: 20, r: 10, rir: 2 } }] })) }, "+ \uC138\uD2B8"), mediaRow(en))), draft.entries.length > 0 && /* @__PURE__ */ React.createElement("button", { className: "btn wide", id: "s-save", onClick: save }, "\uC6B4\uB3D9 \uC800\uC7A5 \xB7 \uCE98\uB9B0\uB354\xB71RM\xB7\uD68C\uBCF5\uC5D0 \uBC18\uC601")), /* @__PURE__ */ React.createElement(Card, { title: "\uAE30\uB85D", right: /* @__PURE__ */ React.createElement(Cite, { ids: ["zourdos", "helmsRIR"] }) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "RIR(\uB0A8\uC740 \uBC18\uBCF5 \uC218)\uC740 1RM \uCD94\uC815 \uC2DC \uBC18\uBCF5 \uC218\uC5D0 \uB354\uD574 \uACC4\uC0B0\uD569\uB2C8\uB2E4. \uC608: 80kg \xD7 8\uD68C, RIR 2 \u2192 10\uD68C \uD55C\uACC4\uB85C \uAC04\uC8FC."), d.sessions.map((s) => /* @__PURE__ */ React.createElement("details", { key: s.id, className: "sess" }, /* @__PURE__ */ React.createElement("summary", null, /* @__PURE__ */ React.createElement(SessionLine, { s })), /* @__PURE__ */ React.createElement(SessionDetail, { s, d })))));
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: "\uC0C8 \uC6B4\uB3D9 \uAE30\uB85D" }, /* @__PURE__ */ React.createElement("div", { className: "form cols" }, /* @__PURE__ */ React.createElement(Field, { label: "\uB0A0\uC9DC" }, /* @__PURE__ */ React.createElement("input", { id: "s-date", type: "date", value: draft.date, onChange: (e) => setDraft({ ...draft, date: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uC2DC\uC791 \uC2DC\uAC01", hint: "\uCE98\uB9B0\uB354\uC640 \uD68C\uBCF5 \uC2DC\uAC04 \uACC4\uC0B0\uC5D0 \uC0AC\uC6A9" }, /* @__PURE__ */ React.createElement("input", { id: "s-time", type: "time", value: draft.time, onChange: (e) => setDraft({ ...draft, time: e.target.value }) }))), tCands.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC218\uC5C5\uD55C \uC120\uC0DD\uB2D8"), /* @__PURE__ */ React.createElement("div", { className: "chips", id: "s-trainers" }, tCands.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, type: "button", className: "chip tog" + (draft.trainerIds.includes(t.id) ? " on" : ""), "aria-pressed": draft.trainerIds.includes(t.id), onClick: () => toggleT(t.id) }, t.name))), /* @__PURE__ */ React.createElement("em", null, draft.trainerIds.filter((id) => tCands.some((t) => t.id === id)).length ? "\uACE0\uB978 \uC120\uC0DD\uB2D8\uACFC\uC758 \uC218\uC5C5\uC73C\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4" : "\uC544\uBB34\uB3C4 \uACE0\uB974\uC9C0 \uC54A\uC73C\uBA74 \uAC1C\uC778 \uC6B4\uB3D9\uC73C\uB85C \uAE30\uB85D\uB429\uB2C8\uB2E4")), /* @__PURE__ */ React.createElement(Field, { label: "\uC218\uC5C5 \uB0B4\uC6A9 \xB7 \uBA54\uBAA8" }, /* @__PURE__ */ React.createElement("textarea", { id: "s-note", rows: "2", placeholder: "\uC608: \uD799\uD78C\uC9C0 \uD328\uD134 \uAD50\uC815, \uB2E4\uC74C \uC2DC\uAC04 \uB370\uB4DC\uB9AC\uD504\uD2B8 \uC9C4\uB3C4", value: draft.note, onChange: (e) => setDraft({ ...draft, note: e.target.value }) })), /* @__PURE__ */ React.createElement(Seg, { value: mode, options: [["strength", "\uADFC\uB825"], ["cardio", "\uC720\uC0B0\uC18C"]], onChange: setMode, small: true }), mode === "strength" ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { className: "row wrap" }, /* @__PURE__ */ React.createElement("select", { id: "s-ex", value: exId, onChange: (e) => setExId(e.target.value), className: "grow" }, groups.map(([g, list]) => /* @__PURE__ */ React.createElement("optgroup", { key: g, label: g }, list.map((e) => /* @__PURE__ */ React.createElement("option", { key: e.id, value: e.id }, e.name)))), /* @__PURE__ */ React.createElement("option", { value: "__new" }, "+ \uC9C1\uC811 \uC785\uB825 (\uC6B4\uB3D9 \uBAA9\uB85D\uC5D0 \uCD94\uAC00)\u2026")), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addEx, disabled: exId === "__new" && !custom.name.trim() }, "\uC885\uBAA9 \uCD94\uAC00")), exId === "__new" && /* @__PURE__ */ React.createElement("div", { className: "form cols", style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement(Field, { label: "\uC6B4\uB3D9 \uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "s-custom", placeholder: "\uC608: \uCF00\uD2C0\uBCA8 \uC2A4\uC719", value: custom.name, onChange: (e) => setCustom({ ...custom, name: e.target.value }), onKeyDown: (e) => e.key === "Enter" && addEx() })), /* @__PURE__ */ React.createElement(Field, { label: "\uC8FC\uB85C \uC4F0\uB294 \uBD80\uC704", hint: "\uACE0\uB974\uBA74 \uD68C\uBCF5\xB7\uC8FC\uAC04 \uBCFC\uB968\uC5D0\uB3C4 \uBC18\uC601" }, /* @__PURE__ */ React.createElement("select", { id: "s-muscle", value: custom.muscle, onChange: (e) => setCustom({ ...custom, muscle: e.target.value }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uC120\uD0DD \uC548 \uD568"), Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.name)))), /* @__PURE__ */ React.createElement(Field, { label: "\uB3C4\uAD6C" }, /* @__PURE__ */ React.createElement("select", { id: "s-eq", value: custom.eq, onChange: (e) => setCustom({ ...custom, eq: e.target.value }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uC120\uD0DD \uC548 \uD568"), EQUIPMENT.map((x) => /* @__PURE__ */ React.createElement("option", { key: x }, x)))))) : /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { className: "form cols" }, /* @__PURE__ */ React.createElement(Field, { label: "\uC885\uB958" }, /* @__PURE__ */ React.createElement("input", { id: "c-mode", value: cardio.mode, onChange: (e) => setCardio({ ...cardio, mode: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uC2DC\uAC04 (\uBD84)" }, /* @__PURE__ */ React.createElement("input", { id: "c-min", type: "number", inputMode: "numeric", value: cardio.minutes, onChange: (e) => setCardio({ ...cardio, minutes: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "\uD3C9\uADE0 \uC2EC\uBC15", hint: cz ? `\u2192 Zone ${cz} \uB85C \uC790\uB3D9 \uBD84\uB958` : "\uC2EC\uBC15 \uD0ED\uC758 \uC874 \uAE30\uC900 \uC801\uC6A9" }, /* @__PURE__ */ React.createElement("input", { id: "c-hr", type: "number", inputMode: "numeric", value: cardio.avgHR, onChange: (e) => setCardio({ ...cardio, avgHR: e.target.value }) }))), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addCardio, disabled: !cardio.avgHR }, "\uC720\uC0B0\uC18C \uCD94\uAC00")), draft.entries.map((en) => en.kind === "cardio" ? /* @__PURE__ */ React.createElement("div", { key: en.id, className: "entry" }, /* @__PURE__ */ React.createElement("div", { className: "entry-h" }, /* @__PURE__ */ React.createElement("b", null, en.mode), /* @__PURE__ */ React.createElement("span", { className: "muted small" }, en.minutes, "\uBD84 \xB7 ", en.avgHR, "bpm \xB7 Z", zoneForHR(d.zones, en.avgHR) || "?"), /* @__PURE__ */ React.createElement("button", { className: "x", "aria-label": "\uC885\uBAA9 \uBE7C\uAE30", onClick: () => dropEntry(en) }, "\xD7")), mediaRow(en)) : /* @__PURE__ */ React.createElement("div", { key: en.id, className: "entry" }, /* @__PURE__ */ React.createElement("div", { className: "entry-h" }, /* @__PURE__ */ React.createElement("b", null, exName(en)), d.best[exKey(en)] && /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uCD94\uC815 1RM ", fmt(d.best[exKey(en)].e1rm, 1), "kg"), /* @__PURE__ */ React.createElement("button", { className: "x", "aria-label": "\uC885\uBAA9 \uBE7C\uAE30", onClick: () => dropEntry(en) }, "\xD7")), /* @__PURE__ */ React.createElement("div", { className: "sets-h" }, /* @__PURE__ */ React.createElement("span", null, "\uC138\uD2B8"), /* @__PURE__ */ React.createElement("span", null, "kg"), /* @__PURE__ */ React.createElement("span", null, "\uD68C"), /* @__PURE__ */ React.createElement("span", null, "RIR"), /* @__PURE__ */ React.createElement("span", null)), en.sets.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "sets" }, /* @__PURE__ */ React.createElement("span", { className: "muted" }, i + 1), /* @__PURE__ */ React.createElement("input", { type: "number", inputMode: "decimal", value: s.w, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, w: e.target.value } : y) })) }), /* @__PURE__ */ React.createElement("input", { type: "number", inputMode: "numeric", value: s.r, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, r: e.target.value } : y) })) }), /* @__PURE__ */ React.createElement("select", { value: s.rir, onChange: (e) => setEntry(en.id, (x) => ({ ...x, sets: x.sets.map((y, j) => j === i ? { ...y, rir: +e.target.value } : y) })) }, [0, 1, 2, 3, 4, 5].map((v) => /* @__PURE__ */ React.createElement("option", { key: v, value: v }, v))), /* @__PURE__ */ React.createElement("button", { className: "x", onClick: () => setEntry(en.id, (x) => ({ ...x, sets: x.sets.filter((_, j) => j !== i) })) }, "\xD7"))), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setEntry(en.id, (x) => ({ ...x, sets: [...x.sets, { ...x.sets[x.sets.length - 1] || { w: 20, r: 10, rir: 2 } }] })) }, "+ \uC138\uD2B8"), mediaRow(en))), draft.entries.length > 0 && /* @__PURE__ */ React.createElement("button", { className: "btn wide", id: "s-save", onClick: save }, "\uC6B4\uB3D9 \uC800\uC7A5 \xB7 \uCE98\uB9B0\uB354\xB71RM\xB7\uD68C\uBCF5\uC5D0 \uBC18\uC601")), /* @__PURE__ */ React.createElement(Card, { title: "\uAE30\uB85D", right: /* @__PURE__ */ React.createElement(Cite, { ids: ["zourdos", "helmsRIR"] }) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "RIR(\uB0A8\uC740 \uBC18\uBCF5 \uC218)\uC740 1RM \uCD94\uC815 \uC2DC \uBC18\uBCF5 \uC218\uC5D0 \uB354\uD574 \uACC4\uC0B0\uD569\uB2C8\uB2E4. \uC608: 80kg \xD7 8\uD68C, RIR 2 \u2192 10\uD68C \uD55C\uACC4\uB85C \uAC04\uC8FC."), d.sessions.map((s) => /* @__PURE__ */ React.createElement("details", { key: s.id, className: "sess" }, /* @__PURE__ */ React.createElement("summary", null, /* @__PURE__ */ React.createElement(SessionLine, { s })), /* @__PURE__ */ React.createElement(SessionDetail, { s, d })))));
 }
 function CalcView({ d }) {
   const logged = Object.keys(d.best);
@@ -1529,8 +1636,8 @@ function App() {
     if (!target.server) return;
     const diff = diffDB(synced.current, target);
     if (!diff.count) return;
-    const now = mediaPaths(target.sessions);
-    diff.removedMedia = [...mediaPaths(synced.current.sessions)].filter((p) => !now.has(p));
+    const now = mediaPaths(target);
+    diff.removedMedia = [...mediaPaths(synced.current)].filter((p) => !now.has(p));
     flushing.current = true;
     setSync({ state: "saving" });
     try {
@@ -1582,6 +1689,7 @@ function App() {
     next.sample = false;
     return next;
   });
+  setCatalog(db.exercises);
   const d = useMemo(() => derive(db, db.activeId), [db]);
   const [mview, setMview] = useState("list");
   const go = (t, view = "detail") => {
@@ -1685,7 +1793,7 @@ function App() {
   return /* @__PURE__ */ React.createElement(Store.Provider, { value: ctx }, /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT"))), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "icon acct" + dot, "aria-label": "\uACC4\uC815\uACFC \uC800\uC7A5 \uC0C1\uD0DC", onClick: () => setAcct(true) }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS.member }))), /* @__PURE__ */ React.createElement("button", { className: "icon", "aria-label": "\uADFC\uAC70\uC640 \uB370\uC774\uD130 \uAD6C\uC870", onClick: () => setRefs({ ids: null }) }, "i"))), adding && role !== "member" && /* @__PURE__ */ React.createElement("div", { className: "addbar" }, /* @__PURE__ */ React.createElement("input", { id: "new-name", placeholder: "\uC0C8 \uD68C\uC6D0 \uC774\uB984", autoFocus: true, value: newName, onChange: (e) => setNewName(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addMember }, "\uCD94\uAC00"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => {
     setAdding(false);
     setNewName("");
-  } }, "\uCDE8\uC18C")), mode === "local" && /* @__PURE__ */ React.createElement("div", { className: "notice" }, "\uC9C0\uAE08\uC740 \uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uB824\uBA74 ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => cfg ? goLogin() : setAcct(true) }, cfg ? "\uB85C\uADF8\uC778" : "\uC11C\uBC84 \uC5F0\uACB0"), "\uD558\uC138\uC694.", db.sample && /* @__PURE__ */ React.createElement(React.Fragment, null, " \uC544\uB798\uB294 \uC608\uC2DC \uD68C\uC6D0 2\uBA85\uC758 \uC0D8\uD50C\uC785\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => setDB({ sample: false, activeId: null, members: [], measurements: [], sessions: [] }) }, "\uBAA8\uB450 \uBE44\uC6B0\uAE30"))), mode === "server" && sync.state === "error" && /* @__PURE__ */ React.createElement("div", { className: "notice bad" }, sync.msg, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5")), /* @__PURE__ */ React.createElement("main", { className: "main" }, body(), /* @__PURE__ */ React.createElement("p", { className: "foot" }, "\uC774 \uC571\uC758 \uC218\uCE58\uB294 \uACF5\uC778 \uACF5\uC2DD\uC5D0 \uB530\uB978 \uCD94\uC815\uCE58\uC774\uBA70 \uC758\uB8CC\uC801 \uC9C4\uB2E8\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", mode === "local" && /* @__PURE__ */ React.createElement(React.Fragment, null, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => {
+  } }, "\uCDE8\uC18C")), mode === "local" && /* @__PURE__ */ React.createElement("div", { className: "notice" }, "\uC9C0\uAE08\uC740 \uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uB824\uBA74 ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => cfg ? goLogin() : setAcct(true) }, cfg ? "\uB85C\uADF8\uC778" : "\uC11C\uBC84 \uC5F0\uACB0"), "\uD558\uC138\uC694.", db.sample && /* @__PURE__ */ React.createElement(React.Fragment, null, " \uC544\uB798\uB294 \uC608\uC2DC \uD68C\uC6D0 2\uBA85\uC758 \uC0D8\uD50C\uC785\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => setDB({ sample: false, activeId: null, members: [], measurements: [], sessions: [], exercises: db.exercises || DEFAULT_EXERCISES }) }, "\uBAA8\uB450 \uBE44\uC6B0\uAE30"))), mode === "server" && sync.state === "error" && /* @__PURE__ */ React.createElement("div", { className: "notice bad" }, sync.msg, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5")), /* @__PURE__ */ React.createElement("main", { className: "main" }, body(), /* @__PURE__ */ React.createElement("p", { className: "foot" }, "\uC774 \uC571\uC758 \uC218\uCE58\uB294 \uACF5\uC778 \uACF5\uC2DD\uC5D0 \uB530\uB978 \uCD94\uC815\uCE58\uC774\uBA70 \uC758\uB8CC\uC801 \uC9C4\uB2E8\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", mode === "local" && /* @__PURE__ */ React.createElement(React.Fragment, null, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => {
     setDB(sampleDB());
   } }, "\uC0D8\uD50C \uB370\uC774\uD130 \uB2E4\uC2DC \uBD88\uB7EC\uC624\uAE30")))), /* @__PURE__ */ React.createElement("nav", { className: "nav", style: { gridTemplateColumns: `repeat(${tabs.length},1fr)` } }, tabs.map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, className: tab === k ? "on" : "", onClick: () => go(k, "list"), "aria-current": tab === k ? "page" : void 0 }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS[k] })), /* @__PURE__ */ React.createElement("span", null, l)))), refs && /* @__PURE__ */ React.createElement(Sheet, { ids: refs.ids, onClose: () => setRefs(null) }), acct && /* @__PURE__ */ React.createElement(AccountSheet, { onClose: () => setAcct(false), cfg, saveCfg, srv, sync, flush, local: mode === "local", goLogin, logout, localData, importLocal })));
 }
