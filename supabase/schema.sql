@@ -435,3 +435,12 @@ select u.id,
   coalesce(u.raw_user_meta_data->>'display_name', '')
 from auth.users u
 on conflict (id) do nothing;
+
+-- ───────── 10. 즐겨찾기 운동 (계정마다, 헬스·필라테스 각 5개까지는 앱에서 제한) ─────────
+alter table public.profiles add column if not exists fav_exercises text[] not null default '{}';
+create or replace function public.set_fav_exercises(ids text[]) returns void
+language sql security definer set search_path = public as $$
+  update public.profiles set fav_exercises = coalesce(ids[1:10], '{}') where id = auth.uid();
+$$;
+revoke all on function public.set_fav_exercises(text[]) from public, anon;
+grant execute on function public.set_fav_exercises(text[]) to authenticated;
