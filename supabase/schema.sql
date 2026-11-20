@@ -7,7 +7,7 @@
 --   트레이너: 배정된 회원의 기록을 같이 보고 고침 (같은 회원을 맡은 트레이너끼리 공유)
 --   회원: 초대 코드로 연결된 자기 기록만
 -- 저장 원칙(앱과 동일): 회원 / 인바디 측정 / 운동 세션 3개가 기록의 전부이고
--- 영양·심박 존·1RM·회복·캘린더·운동 복기는 앱이 이 기록에서 계산합니다.
+-- 영양·심박 존·1RM·회복·캘린더·운동 복기는 앱이 이 기록에서 계산합니다. 운동 목록(exercises)은 센터 공용 사전입니다.
 
 -- ───────── 1. 사용자 프로필 (로그인 계정 1개 = 1행) ─────────
 create table if not exists public.profiles (
@@ -351,6 +351,65 @@ create policy session_media_insert on storage.objects for insert to authenticate
 drop policy if exists session_media_delete on storage.objects;
 create policy session_media_delete on storage.objects for delete to authenticated
   using (bucket_id = 'session-media' and public.can_access_member((storage.foldername(name))[1]));
+
+-- ───────── 9. 운동 목록 (센터 공용: 이름·주 부위·보조 부위·도구·설명·사진/영상) ─────────
+create table if not exists public.exercises (
+  id text primary key,
+  name text not null,
+  muscles text[] not null default '{}',   -- 주 부위 (chest, back, shoulders, biceps, triceps, quads, hamstrings, glutes, calves, abs)
+  muscles2 text[] not null default '{}',  -- 보조 부위
+  equipment text not null default '',      -- 바벨·덤벨·플레이트·케틀벨·클럽벨·머신·케이블·맨몸·밴드·기타
+  note text not null default '',           -- 자세 포인트·설명
+  media jsonb not null default '[]'::jsonb,-- 시범 사진·영상 경로 (lib/<운동 id>/파일)
+  created_by uuid default auth.uid() references public.profiles(id) on delete set null,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+-- 기본 운동 (처음 한 번만 들어가고, 이후 수정·삭제한 내용은 그대로 둠)
+insert into public.exercises (id, name, muscles, muscles2, equipment) values
+  ('bench', '벤치프레스', '{chest}', '{triceps,shoulders}', '바벨'),
+  ('incline_db', '인클라인 덤벨프레스', '{chest}', '{shoulders,triceps}', '덤벨'),
+  ('dip', '딥스', '{chest,triceps}', '{shoulders}', '맨몸'),
+  ('ohp', '오버헤드프레스', '{shoulders}', '{triceps}', '바벨'),
+  ('lateral', '사이드 레터럴 레이즈', '{shoulders}', '{}', '덤벨'),
+  ('pushdown', '트라이셉스 푸시다운', '{triceps}', '{}', '케이블'),
+  ('deadlift', '데드리프트', '{hamstrings,glutes,back}', '{quads}', '바벨'),
+  ('row', '바벨 로우', '{back}', '{biceps}', '바벨'),
+  ('pullup', '풀업', '{back}', '{biceps}', '맨몸'),
+  ('latpull', '랫풀다운', '{back}', '{biceps}', '머신'),
+  ('curl', '바벨 컬', '{biceps}', '{}', '바벨'),
+  ('squat', '백스쿼트', '{quads,glutes}', '{hamstrings}', '바벨'),
+  ('legpress', '레그프레스', '{quads}', '{glutes}', '머신'),
+  ('rdl', '루마니안 데드리프트', '{hamstrings}', '{glutes,back}', '바벨'),
+  ('hipthrust', '힙 쓰러스트', '{glutes}', '{hamstrings}', '바벨'),
+  ('legcurl', '레그 컬', '{hamstrings}', '{}', '머신'),
+  ('calf', '카프 레이즈', '{calves}', '{}', '머신'),
+  ('cablecrunch', '케이블 크런치', '{abs}', '{}', '케이블')
+on conflict (id) do nothing;
+grant select, insert, update, delete on public.exercises to authenticated;
+alter table public.exercises enable row level security;
+-- 모두 보고 추가할 수 있고, 수정·삭제는 선생님(관리자·트레이너) 또는 직접 추가한 사람만
+drop policy if exists exercises_select on public.exercises;
+create policy exercises_select on public.exercises for select to authenticated using (true);
+drop policy if exists exercises_insert on public.exercises;
+create policy exercises_insert on public.exercises for insert to authenticated with check (created_by = auth.uid());
+drop policy if exists exercises_update on public.exercises;
+create policy exercises_update on public.exercises for update to authenticated
+  using (public.is_trainer() or created_by = auth.uid()) with check (public.is_trainer() or created_by = auth.uid());
+drop policy if exists exercises_delete on public.exercises;
+create policy exercises_delete on public.exercises for delete to authenticated using (public.is_trainer() or created_by = auth.uid());
+-- 운동 시범 사진·영상: lib/<운동 id>/파일 — 모두 볼 수 있고, 올리고 지우는 건 그 운동을 고칠 수 있는 사람만
+drop policy if exists exercise_media_select on storage.objects;
+create policy exercise_media_select on storage.objects for select to authenticated
+  using (bucket_id = 'session-media' and (storage.foldername(name))[1] = 'lib');
+drop policy if exists exercise_media_insert on storage.objects;
+create policy exercise_media_insert on storage.objects for insert to authenticated with check (
+  bucket_id = 'session-media' and (storage.foldername(name))[1] = 'lib'
+  and (public.is_trainer() or not exists (select 1 from public.exercises e where e.id = (storage.foldername(name))[2] and e.created_by is distinct from auth.uid())));
+drop policy if exists exercise_media_delete on storage.objects;
+create policy exercise_media_delete on storage.objects for delete to authenticated using (
+  bucket_id = 'session-media' and (storage.foldername(name))[1] = 'lib'
+  and (public.is_trainer() or not exists (select 1 from public.exercises e where e.id = (storage.foldername(name))[2] and e.created_by is distinct from auth.uid())));
 
 -- 이미 가입한 계정이 있으면 프로필을 채워 둠 (관리자 권한은 코드로만)
 insert into public.profiles (id, role, display_name)
