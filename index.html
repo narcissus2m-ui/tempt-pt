@@ -267,6 +267,16 @@ td.nowrap{white-space:nowrap}
 .clist{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
 .clist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .clist li p{flex-basis:100%;margin:0}
+.top{position:relative}
+.actchip{background:none;border:1px solid var(--gold-lo);color:var(--gold);border-radius:999px;padding:4px 10px;font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.mmenu-bg{position:fixed;inset:0;z-index:40}
+.mmenu{position:absolute;right:12px;top:calc(100% + 4px);z-index:41;min-width:230px;max-width:calc(100vw - 24px);max-height:70vh;overflow:auto;background:#181C1F;border:1px solid var(--line);border-radius:8px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.45);display:grid;gap:4px}
+.mmenu>p{margin:2px 6px 4px}
+.mitem{display:grid;gap:2px;text-align:left;background:none;border:1px solid transparent;border-radius:6px;padding:8px 10px;color:inherit;cursor:pointer}
+.mitem:hover{background:var(--sunk)}.mitem.on{border-color:var(--gold-lo)}.mitem.acctitem{border-top:1px solid var(--line);border-radius:0 0 6px 6px}
+.mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.08em}
+.clist li.used{opacity:.7}
+.acct-admin{border:1px solid var(--line);border-radius:6px;padding:12px 16px}.acct-admin summary{cursor:pointer}.acct-admin .card{margin-top:10px}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--card,#222);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;z-index:50;max-width:90vw}
 .sline .tag{margin-right:4px}
 .sdetail{border-top:1px solid var(--line);padding:10px 0}.sdetail:first-of-type{border-top:0;padding-top:2px}
@@ -757,6 +767,7 @@ function useStore() {
 }
 const SUPABASE_URL = "https://iriblzwkqukvqzhbexwz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlyaWJsendrcXVrdnF6aGJleHd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUwNjgzNTEsImV4cCI6MjExMDY0NDM1MX0.MJrG0CFbSWop5GG3Dkl33CWdKJB0o6yY3VgKcBIAXns";
+const ACT_KEY = KEY + ".act";
 const CFG_KEY = KEY + ".server", LOCAL_ONLY_KEY = KEY + ".localOnly", ACTIVE_KEY = KEY + ".active", UPLOADED_KEY = KEY + ".uploaded";
 const lsGet = (k) => {
   try {
@@ -842,12 +853,14 @@ function errMsg(e) {
   if (/Email address .* is invalid|invalid format|validate email/i.test(s)) return "\uC774 \uC774\uBA54\uC77C \uC8FC\uC18C\uB294 \uC4F8 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4. \uB2E4\uB978 \uC8FC\uC18C\uB85C \uAC00\uC785\uD574 \uC8FC\uC138\uC694.";
   if (/Signups not allowed/i.test(s)) return "\uC9C0\uAE08\uC740 \uC0C8 \uAC00\uC785\uC774 \uB9C9\uD600 \uC788\uC2B5\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uC5D0\uAC8C \uBB38\uC758\uD558\uC138\uC694.";
   if (/Password should be/i.test(s)) return "\uBE44\uBC00\uBC88\uD638\uB294 6\uC790 \uC774\uC0C1\uC774\uC5B4\uC57C \uD569\uB2C8\uB2E4.";
-  if (/need_center_name/.test(s)) return "\uC0C8\uB85C \uB9CC\uB4E4 \uC13C\uD130 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694.";
+  if (/need_center_name/.test(s)) return "\uC13C\uD130 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694.";
+  if (/already_staff/.test(s)) return "\uC774\uBBF8 \uC13C\uD130\uC5D0 \uC18D\uD55C \uACC4\uC815\uC774\uC5D0\uC694. \uAD00\uB9AC\uC790 \uACC4\uC815\uC740 \uB2E4\uB978 \uC13C\uD130\uC640 \uC5F0\uACB0\uD560 \uC218 \uC5C6\uC5B4\uC694.";
+  if (/master_only/.test(s)) return "\uAD00\uB9AC\uC790 \uC9C0\uC815\uC740 \uB9C8\uC2A4\uD130\uB9CC \uD560 \uC218 \uC788\uC5B4\uC694.";
   if (/bad_signup_code|Database error saving new user/i.test(s)) return "\uAC00\uC785 \uCF54\uB4DC\uAC00 \uB9DE\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uC5D0\uAC8C \uBC1B\uC740 \uCF54\uB4DC\uB97C \uD655\uC778\uD558\uC138\uC694.";
   if (/not_allowed/.test(s)) return "\uAD00\uB9AC\uC790\uB9CC \uD560 \uC218 \uC788\uB294 \uC791\uC5C5\uC785\uB2C8\uB2E4.";
   if (/exceeded the maximum allowed size|Payload too large|413/i.test(s)) return "\uD30C\uC77C\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4. 50MB \uC774\uD558\uB85C \uC62C\uB824 \uC8FC\uC138\uC694.";
   if (/mime type|invalid_mime/i.test(s)) return "\uC0AC\uC9C4\uC774\uB098 \uC601\uC0C1 \uD30C\uC77C\uB9CC \uC62C\uB9B4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.";
-  if (/invalid_code/.test(s)) return "\uCF54\uB4DC\uAC00 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uC774\uBBF8 \uB2E4\uB978 \uACC4\uC815\uC5D0 \uC5F0\uACB0\uB41C \uCF54\uB4DC\uC785\uB2C8\uB2E4.";
+  if (/invalid_code/.test(s)) return "\uCF54\uB4DC\uAC00 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uC774\uBBF8 \uC0AC\uC6A9\uB41C \uCF54\uB4DC\uC785\uB2C8\uB2E4.";
   if (/already_linked/.test(s)) return "\uC774\uBBF8 \uC5F0\uACB0\uB41C \uCF54\uB4DC\uC785\uB2C8\uB2E4.";
   if (/row-level security|permission denied/i.test(s)) return "\uC774 \uAE30\uB85D\uC744 \uBC14\uAFC0 \uAD8C\uD55C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.";
   if (/Invalid API key|JWT/i.test(s)) return "\uC11C\uBC84 \uD0A4\uAC00 \uB9DE\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. anon public \uD0A4\uB97C \uB2E4\uC2DC \uD655\uC778\uD558\uC138\uC694.";
@@ -866,9 +879,9 @@ const memberRow = (m) => {
 const fromMemberRow = (r, me, links, cms = []) => ({ ...r.data || {}, id: r.id, name: r.name, inviteCode: r.invite_code, linked: !!r.user_id, trainerId: r.trainer_id, trainerIds: links.filter((l) => l.member_id === r.id).map((l) => l.trainer_id), mine: r.user_id === me, centers: cms.filter((c) => c.member_id === r.id).map((c) => c.center_id) });
 const recMeta = (r) => ({ centerId: r.center_id || null, isPublic: r.is_public !== false, by: r.created_by || null, createdAt: r.created_at || null });
 const numOrNull = (v) => v == null || v === "" || isNaN(+v) ? null : +v;
-const measRow = (x) => ({ id: x.id, member_id: x.memberId, date: x.date, height_cm: numOrNull(x.heightCm), weight_kg: numOrNull(x.weightKg), smm_kg: numOrNull(x.smmKg), body_fat_pct: numOrNull(x.bodyFatPct) });
+const measRow = (x) => ({ id: x.id, member_id: x.memberId, center_id: x.centerId || null, date: x.date, height_cm: numOrNull(x.heightCm), weight_kg: numOrNull(x.weightKg), smm_kg: numOrNull(x.smmKg), body_fat_pct: numOrNull(x.bodyFatPct) });
 const fromMeasRow = (r) => ({ id: r.id, memberId: r.member_id, date: String(r.date).slice(0, 10), heightCm: numOrNull(r.height_cm), weightKg: numOrNull(r.weight_kg), smmKg: numOrNull(r.smm_kg), bodyFatPct: numOrNull(r.body_fat_pct), ...recMeta(r) });
-const sessRow = (s) => ({ id: s.id, member_id: s.memberId, date: s.date, time: s.time || null, entries: s.entries || [], trainer_ids: s.trainerIds || [], note: s.note || "" });
+const sessRow = (s) => ({ id: s.id, member_id: s.memberId, center_id: s.centerId || null, date: s.date, time: s.time || null, entries: s.entries || [], trainer_ids: s.trainerIds || [], note: s.note || "" });
 const fromSessRow = (r) => ({ id: r.id, memberId: r.member_id, date: String(r.date).slice(0, 10), time: r.time || "", entries: r.entries || [], trainerIds: r.trainer_ids || [], note: r.note || "", ...recMeta(r) });
 const mediaPaths = (db) => {
   const out = /* @__PURE__ */ new Set();
@@ -876,8 +889,8 @@ const mediaPaths = (db) => {
   (db.exercises || []).forEach((e) => (e.media || []).forEach((x) => out.add(x.path)));
   return out;
 };
-const exRow = (e) => ({ id: e.id, name: e.name || "", category: exCat(e), muscles: e.p || [], muscles2: e.s || [], equipment: e.eq || "", note: e.note || "", media: e.media || [] });
-const fromExRow = (r) => ({ id: r.id, name: r.name, cat: r.category || "gym", p: r.muscles || [], s: r.muscles2 || [], eq: r.equipment || "", note: r.note || "", media: r.media || [], by: r.created_by || null });
+const exRow = (e) => ({ id: e.id, name: e.name || "", category: exCat(e), muscles: e.p || [], muscles2: e.s || [], equipment: e.eq || "", note: e.note || "", media: e.media || [], center_id: e.center || null });
+const fromExRow = (r) => ({ id: r.id, name: r.name, cat: r.category || "gym", p: r.muscles || [], s: r.muscles2 || [], eq: r.equipment || "", note: r.note || "", media: r.media || [], by: r.created_by || null, center: r.center_id || null, base: !!r.is_base });
 const TABLES = [["members", memberRow], ["measurements", measRow], ["sessions", sessRow], ["exercises", exRow]];
 async function fetchAll(sb, table, order = ["created_at", "id"]) {
   const out = [];
@@ -897,7 +910,7 @@ async function loadServer(sb, user) {
     if (r.error) throw r.error;
     return r.data || [];
   };
-  const [profs, mem, links, meas, sess, exs, cstaff, cmem, cents, priv] = await Promise.all([
+  const [profs, mem, links, meas, sess, exs, cstaff, cmem, cents, priv, tpls] = await Promise.all([
     fetchAll(sb, "profiles", ["created_at", "id"]),
     fetchAll(sb, "members"),
     fetchAll(sb, "member_trainers", ["created_at", "member_id", "trainer_id"]),
@@ -907,21 +920,39 @@ async function loadServer(sb, user) {
     fetchAll(sb, "center_staff", ["created_at", "center_id", "user_id"]),
     fetchAll(sb, "center_members", ["created_at", "center_id", "member_id"]),
     sb.from("centers").select("id,name,created_at").order("created_at").then(ok),
-    sb.rpc("private_records").then(ok)
+    sb.rpc("private_records").then(ok),
+    sb.from("exercise_templates").select("*").order("id").then(ok)
   ]);
   const meta = user.user_metadata || {};
   const centerNames = Object.fromEntries(cents.map((c) => [c.id, c.name || "\uC13C\uD130"]));
   priv.forEach((x) => {
     if (x.center_name && !centerNames[x.center_id]) centerNames[x.center_id] = x.center_name;
   });
-  const myCenters = cstaff.filter((c) => c.user_id === user.id).map((c) => ({ id: c.center_id, role: c.role, name: centerNames[c.center_id] || "\uC13C\uD130" })).sort((a, b) => (b.role === "admin") - (a.role === "admin"));
+  let myCenters = cstaff.filter((c) => c.user_id === user.id).map((c) => ({ id: c.center_id, role: c.role, name: centerNames[c.center_id] || "\uC13C\uD130" })).sort((a, b) => (b.role === "admin") - (a.role === "admin"));
   const p0 = profs.find((p) => p.id === user.id) || { id: user.id, display_name: meta.display_name || "" };
-  const profile = { ...p0, role: myCenters.some((c) => c.role === "admin") ? "admin" : myCenters.length ? "trainer" : "member" };
   const people = Object.fromEntries(profs.map((p) => [p.id, { name: p.display_name || "", role: "member" }]));
   cstaff.forEach((c) => {
     const x = people[c.user_id];
     if (x && x.role !== "admin") x.role = c.role;
   });
+  const master = !!p0.is_master;
+  const centersAll = cents.map((c) => ({
+    id: c.id,
+    name: c.name || "\uC13C\uD130",
+    admins: cstaff.filter((s) => s.center_id === c.id && s.role === "admin").map((s) => {
+      var _a;
+      return ((_a = people[s.user_id]) == null ? void 0 : _a.name) || "\uAD00\uB9AC\uC790";
+    }),
+    trainers: cstaff.filter((s) => s.center_id === c.id && s.role === "trainer").length,
+    members: cmem.filter((x) => x.center_id === c.id).length
+  }));
+  let act = null;
+  if (master) {
+    const want = lsGet(ACT_KEY);
+    act = (centersAll.find((c) => c.id === want) || centersAll.find((c) => myCenters.some((x) => x.id === c.id && x.role === "admin")) || centersAll[0] || {}).id || null;
+    myCenters = act ? [{ id: act, role: "admin", name: centerNames[act] || "\uC13C\uD130" }] : [];
+  } else act = (myCenters[0] || {}).id || null;
+  const profile = { ...p0, role: myCenters.some((c) => c.role === "admin") ? "admin" : myCenters.length ? "trainer" : "member" };
   const mine = new Set(myCenters.map((c) => c.id)), seen = /* @__PURE__ */ new Map();
   cstaff.filter((c) => myCenters.length ? mine.has(c.center_id) : true).forEach((c) => {
     var _a;
@@ -930,7 +961,15 @@ async function loadServer(sb, user) {
     seen.set(c.user_id, { id: c.user_id, name: ((_a = people[c.user_id]) == null ? void 0 : _a.name) || "\uAC15\uC0AC", role: c.role });
   });
   const staff = [...seen.values()];
-  const members = mem.map((r) => fromMemberRow(r, user.id, links, cmem));
+  let members = mem.map((r) => fromMemberRow(r, user.id, links, cmem));
+  if (master) members = members.filter((m) => act && (m.centers || []).includes(act));
+  const mids = new Set(members.map((m) => m.id));
+  const memCenters = (members.find((m) => m.mine) || {}).centers || [];
+  const staffView = profile.role !== "member";
+  const allEx = exs.map(fromExRow);
+  const inScope = (e) => staffView ? e.center === act || !e.center && e.by === user.id : e.by === user.id || !!e.center && memCenters.includes(e.center);
+  let exercises = allEx.filter(inScope);
+  if (!staffView && !memCenters.length) exercises = exercises.concat(tpls.map((t) => ({ ...fromExRow(t), tpl: true, base: true })));
   const saved = lsGet(ACTIVE_KEY);
   return {
     profile,
@@ -938,15 +977,21 @@ async function loadServer(sb, user) {
     people,
     centerNames,
     myCenters,
+    master,
+    act,
+    centersAll,
+    memCenters,
+    extraEx: allEx.filter((e) => !inScope(e)),
+    wantAdmin: !!meta.want_admin && !master && !myCenters.some((c) => c.role === "admin"),
     db: {
       server: true,
       sample: false,
       activeId: (members.find((m) => m.id === saved) || members[0] || {}).id || null,
       members,
-      measurements: meas.map(fromMeasRow),
-      sessions: sess.map(fromSessRow),
-      exercises: exs.map(fromExRow),
-      privates: priv.map((x) => ({ kind: x.kind, id: x.id, memberId: x.member_id, date: String(x.date).slice(0, 10), centerName: x.center_name || "" }))
+      measurements: meas.map(fromMeasRow).filter((x) => mids.has(x.memberId)),
+      sessions: sess.map(fromSessRow).filter((x) => mids.has(x.memberId)),
+      exercises,
+      privates: master ? [] : priv.map((x) => ({ kind: x.kind, id: x.id, memberId: x.member_id, date: String(x.date).slice(0, 10), centerName: x.center_name || "" }))
     }
   };
 }
@@ -954,14 +999,15 @@ function diffDB(a, b) {
   const out = {};
   let n = 0;
   for (const [k, toRow] of TABLES) {
-    const A = new Map((a[k] || []).map((x) => [x.id, JSON.stringify(toRow(x))]));
+    const real = (L) => (L || []).filter((x) => !x.tpl);
+    const A = new Map(real(a[k]).map((x) => [x.id, JSON.stringify(toRow(x))]));
     const d = { add: [], change: [], del: [] };
-    for (const x of b[k] || []) {
+    for (const x of real(b[k])) {
       const row = toRow(x);
       if (!A.has(x.id)) d.add.push(row);
       else if (A.get(x.id) !== JSON.stringify(row)) d.change.push(row);
     }
-    const B = new Set((b[k] || []).map((x) => x.id));
+    const B = new Set(real(b[k]).map((x) => x.id));
     for (const id of A.keys()) if (!B.has(id)) d.del.push(id);
     n += d.add.length + d.change.length + d.del.length;
     out[k] = d;
@@ -1005,7 +1051,7 @@ function localDBRaw() {
 }
 function AuthScreen({ sb, onLocal, onSettings }) {
   const [tab, setTab] = useState("in");
-  const [f, setF] = useState({ email: "", pw: "", name: "", role: "member", code: "", how: "new", center: "" });
+  const [f, setF] = useState({ email: "", pw: "", name: "", role: "member", code: "" });
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState(null);
   const set = (k, v) => setF({ ...f, [k]: v });
   useEffect(() => {
@@ -1029,12 +1075,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
       setMsg({ err: true, t: "\uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694." });
       return;
     }
-    const newCenter = tab === "up" && f.role === "admin" && f.how === "new";
-    const staff = tab === "up" && f.role !== "member" && !newCenter;
-    if (newCenter && !f.center.trim()) {
-      setMsg({ err: true, t: "\uC0C8\uB85C \uB9CC\uB4E4 \uC13C\uD130 \uC774\uB984\uC744 \uC785\uB825\uD558\uC138\uC694." });
-      return;
-    }
+    const staff = tab === "up" && f.role === "trainer";
     if (staff && !f.code.trim()) {
       setMsg({ err: true, t: `${ROLE_NAME[f.role]} \uAC00\uC785 \uCF54\uB4DC\uB97C \uC785\uB825\uD558\uC138\uC694.` });
       return;
@@ -1051,7 +1092,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
           if (chk.error) throw chk.error;
           if (!chk.data) throw new Error("bad_signup_code");
         }
-        const data0 = { role: f.role, display_name: f.name.trim(), ...staff ? { signup_code: f.code.trim().toUpperCase() } : {}, ...newCenter ? { center_name: f.center.trim() } : {} };
+        const data0 = { role: f.role, display_name: f.name.trim(), ...staff ? { signup_code: f.code.trim().toUpperCase() } : {} };
         const { data, error } = await sb.auth.signUp({ email, password: f.pw, options: { data: data0 } });
         if (error) throw error;
         if (!data.session) {
@@ -1067,7 +1108,7 @@ function AuthScreen({ sb, onLocal, onSettings }) {
   return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT")))), /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "stack authwrap" }, /* @__PURE__ */ React.createElement(Card, { title: tab === "in" ? "\uB85C\uADF8\uC778" : "\uD68C\uC6D0\uAC00\uC785", right: /* @__PURE__ */ React.createElement(Seg, { value: tab, options: [["in", "\uB85C\uADF8\uC778"], ["up", "\uAC00\uC785"]], onChange: (v) => {
     setTab(v);
     setMsg(null);
-  }, small: true }) }, /* @__PURE__ */ React.createElement("form", { className: "form", onSubmit: submit, noValidate: true }, tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uB098\uB294" }, /* @__PURE__ */ React.createElement(Seg, { value: f.role, options: [["member", "\uD68C\uC6D0"], ["trainer", "\uAC15\uC0AC"], ["admin", "\uAD00\uB9AC\uC790"]], onChange: (v) => set("role", v), small: true })), tab === "up" && f.role === "member" && /* @__PURE__ */ React.createElement("p", { className: "small muted", id: "a-member-hint" }, "\uD68C\uC6D0\uC740 \uCF54\uB4DC \uC5C6\uC774 \uAC00\uC785\uD574 \uD63C\uC790 \uAE30\uB85D\uD560 \uC218 \uC788\uC5B4\uC694. \uC13C\uD130\uC5D0\uC11C \uCD08\uB300 \uCF54\uB4DC\uB97C \uBC1B\uC73C\uBA74 \uAC00\uC785 \uB4A4\uC5D0 \uC5F0\uACB0\uD558\uC138\uC694."), tab === "up" && f.role === "admin" && /* @__PURE__ */ React.createElement("div", { id: "a-how" }, /* @__PURE__ */ React.createElement(Seg, { value: f.how, options: [["new", "\uC0C8 \uC13C\uD130 \uB9CC\uB4E4\uAE30"], ["join", "\uAE30\uC874 \uC13C\uD130 \uD569\uB958"]], onChange: (v) => set("how", v), small: true })), tab === "up" && f.role === "admin" && f.how === "new" && /* @__PURE__ */ React.createElement(Field, { label: "\uC13C\uD130 \uC774\uB984", hint: "\uD68C\uC6D0\xB7\uAC15\uC0AC \uD654\uBA74\uC5D0 \uBCF4\uC774\uB294 \uC774\uB984\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "a-center", value: f.center, onChange: (e) => set("center", e.target.value), autoComplete: "organization" })), tab === "up" && (f.role === "trainer" || f.role === "admin" && f.how === "join") && /* @__PURE__ */ React.createElement(Field, { label: `${ROLE_NAME[f.role]} \uAC00\uC785 \uCF54\uB4DC`, hint: "\uC13C\uD130 \uAD00\uB9AC\uC790 \uD654\uBA74\uC5D0 \uC788\uB294 \uCF54\uB4DC\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "a-code", value: f.code, onChange: (e) => set("code", e.target.value.toUpperCase()), autoCapitalize: "characters", autoComplete: "off" })), tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "a-name", value: f.name, onChange: (e) => set("name", e.target.value), autoComplete: "name" })), /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uBA54\uC77C" }, /* @__PURE__ */ React.createElement("input", { id: "a-email", type: "email", inputMode: "email", autoCapitalize: "off", autoCorrect: "off", spellCheck: "false", value: f.email, onChange: (e) => set("email", e.target.value), autoComplete: "email" })), /* @__PURE__ */ React.createElement(Field, { label: "\uBE44\uBC00\uBC88\uD638", hint: tab === "up" ? "6\uC790 \uC774\uC0C1" : "" }, /* @__PURE__ */ React.createElement("input", { id: "a-pw", type: "password", value: f.pw, onChange: (e) => set("pw", e.target.value), autoComplete: tab === "in" ? "current-password" : "new-password" })), /* @__PURE__ */ React.createElement("label", { className: "check", htmlFor: "a-remember" }, /* @__PURE__ */ React.createElement("input", { id: "a-remember", type: "checkbox", checked: remember, onChange: (e) => setRememberS(e.target.checked) }), /* @__PURE__ */ React.createElement("span", null, "\uC790\uB3D9 \uB85C\uADF8\uC778"), /* @__PURE__ */ React.createElement("em", { className: "muted small" }, remember ? "\uC774 \uAE30\uAE30\uC5D0\uC11C \uB85C\uADF8\uC778 \uC0C1\uD0DC \uC720\uC9C0" : "\uBE0C\uB77C\uC6B0\uC800\uB97C \uB2EB\uC73C\uBA74 \uB85C\uADF8\uC544\uC6C3")), msg && /* @__PURE__ */ React.createElement("p", { id: "a-msg", className: "small" + (msg.err ? " errtxt" : ""), role: "status" }, msg.t), /* @__PURE__ */ React.createElement("button", { className: "btn", type: "submit", disabled: busy }, busy ? "\uC7A0\uC2DC\uB9CC\uC694\u2026" : tab === "in" ? "\uB85C\uADF8\uC778" : "\uAC00\uC785\uD558\uAE30"))), /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uAE30\uB85D\uC744 \uBD05\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uB294 \uC13C\uD130\uB97C \uB9CC\uB4E4\uACE0 \uD68C\uC6D0\uC744 \uAC15\uC0AC\uC5D0\uAC8C \uBC30\uC815\uD558\uACE0, \uAC15\uC0AC\uB294 \uB9E1\uC740 \uD68C\uC6D0\uC758 \uC218\uC5C5\uC744 \uAE30\uB85D\uD558\uBA70, \uD68C\uC6D0\uC740 \uC13C\uD130\uC5D0\uC11C \uBC1B\uC740 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC5F0\uACB0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row center" }, /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onLocal }, "\uB85C\uADF8\uC778 \uC5C6\uC774 \uC774 \uAE30\uAE30\uC5D0\uC11C\uB9CC \uC4F0\uAE30"), /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onSettings }, "\uC11C\uBC84 \uC124\uC815")))));
+  }, small: true }) }, /* @__PURE__ */ React.createElement("form", { className: "form", onSubmit: submit, noValidate: true }, tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uB098\uB294" }, /* @__PURE__ */ React.createElement(Seg, { value: f.role, options: [["member", "\uD68C\uC6D0"], ["trainer", "\uAC15\uC0AC"], ["admin", "\uAD00\uB9AC\uC790"]], onChange: (v) => set("role", v), small: true })), tab === "up" && f.role === "member" && /* @__PURE__ */ React.createElement("p", { className: "small muted", id: "a-member-hint" }, "\uD68C\uC6D0\uC740 \uCF54\uB4DC \uC5C6\uC774 \uAC00\uC785\uD574 \uD63C\uC790 \uAE30\uB85D\uD560 \uC218 \uC788\uC5B4\uC694. \uC13C\uD130\uC5D0\uC11C \uCD08\uB300 \uCF54\uB4DC\uB97C \uBC1B\uC73C\uBA74 \uAC00\uC785 \uB4A4\uC5D0 \uC5F0\uACB0\uD558\uC138\uC694."), tab === "up" && f.role === "admin" && /* @__PURE__ */ React.createElement("p", { className: "small muted", id: "a-admin-hint" }, "\uAD00\uB9AC\uC790\uB294 \uAC00\uC785\uD55C \uB4A4 \uB9C8\uC2A4\uD130\uC5D0\uAC8C \uBC1B\uC740 ", /* @__PURE__ */ React.createElement("b", null, "\uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC"), "\uC640 \uC13C\uD130 \uC774\uB984\uC744 \uB123\uC73C\uBA74 \uB0B4 \uC13C\uD130\uAC00 \uC5F4\uB824\uC694."), tab === "up" && f.role === "trainer" && /* @__PURE__ */ React.createElement(Field, { label: "\uAC15\uC0AC \uAC00\uC785 \uCF54\uB4DC", hint: "\uC13C\uD130 \uAD00\uB9AC\uC790 \uD654\uBA74\uC5D0 \uC788\uB294 \uCF54\uB4DC\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "a-code", value: f.code, onChange: (e) => set("code", e.target.value.toUpperCase()), autoCapitalize: "characters", autoComplete: "off" })), tab === "up" && /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "a-name", value: f.name, onChange: (e) => set("name", e.target.value), autoComplete: "name" })), /* @__PURE__ */ React.createElement(Field, { label: "\uC774\uBA54\uC77C" }, /* @__PURE__ */ React.createElement("input", { id: "a-email", type: "email", inputMode: "email", autoCapitalize: "off", autoCorrect: "off", spellCheck: "false", value: f.email, onChange: (e) => set("email", e.target.value), autoComplete: "email" })), /* @__PURE__ */ React.createElement(Field, { label: "\uBE44\uBC00\uBC88\uD638", hint: tab === "up" ? "6\uC790 \uC774\uC0C1" : "" }, /* @__PURE__ */ React.createElement("input", { id: "a-pw", type: "password", value: f.pw, onChange: (e) => set("pw", e.target.value), autoComplete: tab === "in" ? "current-password" : "new-password" })), /* @__PURE__ */ React.createElement("label", { className: "check", htmlFor: "a-remember" }, /* @__PURE__ */ React.createElement("input", { id: "a-remember", type: "checkbox", checked: remember, onChange: (e) => setRememberS(e.target.checked) }), /* @__PURE__ */ React.createElement("span", null, "\uC790\uB3D9 \uB85C\uADF8\uC778"), /* @__PURE__ */ React.createElement("em", { className: "muted small" }, remember ? "\uC774 \uAE30\uAE30\uC5D0\uC11C \uB85C\uADF8\uC778 \uC0C1\uD0DC \uC720\uC9C0" : "\uBE0C\uB77C\uC6B0\uC800\uB97C \uB2EB\uC73C\uBA74 \uB85C\uADF8\uC544\uC6C3")), msg && /* @__PURE__ */ React.createElement("p", { id: "a-msg", className: "small" + (msg.err ? " errtxt" : ""), role: "status" }, msg.t), /* @__PURE__ */ React.createElement("button", { className: "btn", type: "submit", disabled: busy }, busy ? "\uC7A0\uC2DC\uB9CC\uC694\u2026" : tab === "in" ? "\uB85C\uADF8\uC778" : "\uAC00\uC785\uD558\uAE30"))), /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uAE30\uB85D\uC744 \uBD05\uB2C8\uB2E4. \uAD00\uB9AC\uC790\uB294 \uB9C8\uC2A4\uD130\uC5D0\uAC8C \uBC1B\uC740 \uCF54\uB4DC\uB85C \uC13C\uD130\uB97C \uC5F4\uACE0 \uD68C\uC6D0\uC744 \uAC15\uC0AC\uC5D0\uAC8C \uBC30\uC815\uD558\uACE0, \uAC15\uC0AC\uB294 \uB9E1\uC740 \uD68C\uC6D0\uC758 \uC218\uC5C5\uC744 \uAE30\uB85D\uD558\uBA70, \uD68C\uC6D0\uC740 \uC13C\uD130\uC5D0\uC11C \uBC1B\uC740 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC5F0\uACB0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row center" }, /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onLocal }, "\uB85C\uADF8\uC778 \uC5C6\uC774 \uC774 \uAE30\uAE30\uC5D0\uC11C\uB9CC \uC4F0\uAE30"), /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: onSettings }, "\uC11C\uBC84 \uC124\uC815")))));
 }
 function MemberStart() {
   const { srv, update } = useStore();
@@ -1091,6 +1132,70 @@ function MemberStart() {
     x.activeId = id;
   });
   return /* @__PURE__ */ React.createElement("div", { className: "stack" }, /* @__PURE__ */ React.createElement(Card, { title: "\uC13C\uD130\uC640 \uC5F0\uACB0" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uC13C\uD130(\uAD00\uB9AC\uC790\xB7\uAC15\uC0AC)\uC5D0\uAC8C \uBC1B\uC740 6\uC790\uB9AC \uCD08\uB300 \uCF54\uB4DC\uB97C \uB123\uC73C\uBA74, \uC13C\uD130\uC5D0\uC11C \uAE30\uB85D\uD574 \uB454 \uC778\uBC14\uB514\xB7\uC6B4\uB3D9 \uAE30\uB85D\uC744 \uADF8\uB300\uB85C \uC774\uC5B4\uC11C \uBD05\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "addbar flat" }, /* @__PURE__ */ React.createElement("input", { id: "claim-code", placeholder: "\uC608: 7F3K9Q", value: code, onChange: (e) => setCode(e.target.value.toUpperCase()), maxLength: 6, onKeyDown: (e) => e.key === "Enter" && claim() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: claim, disabled: busy || !code.trim() }, "\uC5F0\uACB0")), err && /* @__PURE__ */ React.createElement("p", { className: "small errtxt" }, err)), /* @__PURE__ */ React.createElement(Card, { title: "\uD63C\uC790 \uC2DC\uC791\uD558\uAE30" }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC13C\uD130 \uC5C6\uC774 \uB0B4 \uAE30\uB85D\uBD80\uD130 \uC4F0\uACE0 \uC2F6\uB2E4\uBA74 \uBC14\uB85C \uC2DC\uC791\uD558\uC138\uC694. \uB098\uC911\uC5D0 \uCD08\uB300 \uCF54\uB4DC\uB97C \uBC1B\uC73C\uBA74 \uB0B4 \uC815\uBCF4\uC5D0\uC11C \uC13C\uD130\uC640 \uC5F0\uACB0\uD560 \uC218 \uC788\uC5B4\uC694."), /* @__PURE__ */ React.createElement("button", { className: "btn ghost", onClick: solo }, "\uB0B4 \uAE30\uB85D \uB9CC\uB4E4\uAE30")));
+}
+function AdminActivate() {
+  const { srv } = useStore();
+  const [code, setCode] = useState(""), [name, setName] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  const go = async () => {
+    if (!code.trim() || !name.trim()) {
+      setErr("\uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC\uC640 \uC13C\uD130 \uC774\uB984\uC744 \uBAA8\uB450 \uB123\uC5B4 \uC8FC\uC138\uC694.");
+      return;
+    }
+    setBusy(true);
+    setErr("");
+    const { error } = await srv.sb.rpc("activate_admin", { code: code.trim(), center_name: name.trim() });
+    if (error) {
+      setErr(errMsg(error));
+      setBusy(false);
+      return;
+    }
+    await srv.reload();
+    setBusy(false);
+  };
+  return /* @__PURE__ */ React.createElement(Card, { title: "\uAD00\uB9AC\uC790 \uACC4\uC815 \uD65C\uC131\uD654", tone: "feature" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uB9C8\uC2A4\uD130\uC5D0\uAC8C \uBC1B\uC740 \uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC\uC640 \uC6B4\uC601\uD560 \uC13C\uD130 \uC774\uB984\uC744 \uB123\uC73C\uBA74 \uB0B4 \uC13C\uD130\uAC00 \uC5F4\uB9AC\uACE0 \uAD00\uB9AC\uC790 \uAE30\uB2A5\uC744 \uC4F8 \uC218 \uC788\uC5B4\uC694. \uAE30\uBCF8 \uC6B4\uB3D9 \uBAA9\uB85D\uB3C4 \uB0B4 \uC13C\uD130 \uBAA9\uB85D\uC73C\uB85C \uBCF5\uC0AC\uB3FC\uC694."), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(Field, { label: "\uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC" }, /* @__PURE__ */ React.createElement("input", { id: "act-code", value: code, onChange: (e) => setCode(e.target.value.toUpperCase()), autoCapitalize: "characters", autoComplete: "off" })), /* @__PURE__ */ React.createElement(Field, { label: "\uC13C\uD130 \uC774\uB984", hint: "\uD68C\uC6D0\xB7\uAC15\uC0AC \uD654\uBA74\uC5D0 \uBCF4\uC774\uB294 \uC774\uB984\uC785\uB2C8\uB2E4" }, /* @__PURE__ */ React.createElement("input", { id: "act-center", value: name, onChange: (e) => setName(e.target.value), autoComplete: "organization" })), /* @__PURE__ */ React.createElement("button", { className: "btn", id: "act-go", disabled: busy, onClick: go }, busy ? "\uC7A0\uC2DC\uB9CC\uC694\u2026" : "\uD65C\uC131\uD654")), err && /* @__PURE__ */ React.createElement("p", { className: "small errtxt", id: "act-err" }, err));
+}
+function MasterAdmins() {
+  const { srv } = useStore();
+  const [list, setList] = useState(null), [note, setNote] = useState(""), [busy, setBusy] = useState(false), [err, setErr] = useState("");
+  const load = async () => {
+    const { data, error } = await srv.sb.from("admin_invites").select("*").order("created_at", { ascending: false });
+    if (error) setErr(errMsg(error));
+    else setList(data || []);
+  };
+  useEffect(() => {
+    load();
+  }, []);
+  const issue = async () => {
+    setBusy(true);
+    setErr("");
+    const { error } = await srv.sb.rpc("issue_admin_code", { nt: note.trim() });
+    if (error) setErr(errMsg(error));
+    else {
+      setNote("");
+      await load();
+    }
+    setBusy(false);
+  };
+  const drop = async (code) => {
+    setBusy(true);
+    const { error } = await srv.sb.from("admin_invites").delete().eq("code", code);
+    if (error) setErr(errMsg(error));
+    else await load();
+    setBusy(false);
+  };
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: "\uAD00\uB9AC\uC790 \uACC4\uC815", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, srv.centersAll.length, "\uACF3") }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uB9C8\uC2A4\uD130\uB294 \uBAA8\uB4E0 \uC13C\uD130\uB97C \uBCF4\uACE0 \uACE0\uCE60 \uC218 \uC788\uC5B4\uC694. \uC811\uC18D\uC744 \uB204\uB974\uBA74 \uADF8 \uAD00\uB9AC\uC790 \uACC4\uC815\uC73C\uB85C \uB4E4\uC5B4\uAC00 \uD68C\uC6D0\xB7\uAC15\uC0AC\xB7\uC6B4\uB3D9 \uBAA9\uB85D\uC744 \uAD00\uB9AC\uD569\uB2C8\uB2E4. \uC624\uB978\uCABD \uC704 \uD504\uB85C\uD544 \uC544\uC774\uCF58\uC5D0\uC11C\uB3C4 \uBC14\uAFC0 \uC218 \uC788\uC5B4\uC694."), /* @__PURE__ */ React.createElement("ul", { className: "clist", id: "adm-centers" }, srv.centersAll.map((c) => /* @__PURE__ */ React.createElement("li", { key: c.id, "data-center": c.name }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, c.admins.join(", ") || "\uAD00\uB9AC\uC790 \uC5C6\uC74C"), " ", /* @__PURE__ */ React.createElement("span", { className: "small muted" }, c.name, " \xB7 \uAC15\uC0AC ", c.trainers, "\uBA85 \xB7 \uD68C\uC6D0 ", c.members, "\uBA85")), c.id === srv.act ? /* @__PURE__ */ React.createElement("span", { className: "pill ok" }, "\uC811\uC18D \uC911") : /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", disabled: busy, onClick: () => srv.switchAct(c.id) }, "\uC811\uC18D"))))), /* @__PURE__ */ React.createElement(Card, { title: "\uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uD55C \uBC88\uB9CC \uC4F8 \uC218 \uC788\uC5B4\uC694") }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC0C8 \uC13C\uD130 \uAD00\uB9AC\uC790\uC5D0\uAC8C \uC774 \uCF54\uB4DC\uB97C \uBCF4\uB0B4\uC138\uC694. \uAD00\uB9AC\uC790\uB85C \uAC00\uC785\uD55C \uB4A4 \uCF54\uB4DC\uC640 \uC13C\uD130 \uC774\uB984\uC744 \uB123\uC73C\uBA74 \uC13C\uD130\uAC00 \uC5F4\uB9AC\uACE0, \uAE30\uBCF8 \uC6B4\uB3D9 \uBAA9\uB85D\uC774 \uADF8 \uC13C\uD130 \uBAA9\uB85D\uC73C\uB85C \uBCF5\uC0AC\uB3FC\uC694. \uAC15\uC0AC\xB7\uD68C\uC6D0 \uCF54\uB4DC\uB294 \uADF8 \uAD00\uB9AC\uC790 \uACC4\uC815\uC73C\uB85C \uC811\uC18D\uD574\uC11C \uBCF4\uB0B4\uBA74 \uADF8 \uC13C\uD130 \uC18C\uC18D\uC774 \uB3FC\uC694."), /* @__PURE__ */ React.createElement("div", { className: "addbar flat" }, /* @__PURE__ */ React.createElement("input", { id: "inv-note", placeholder: "\uBA54\uBAA8 (\uC608: \uAC15\uB0A8\uC810 \uAE40\uC6D0\uC7A5)", value: note, onChange: (e) => setNote(e.target.value), maxLength: 40 }), /* @__PURE__ */ React.createElement("button", { className: "btn", id: "inv-issue", disabled: busy, onClick: issue }, "\uCF54\uB4DC \uBC1C\uAE09")), list && (list.length ? /* @__PURE__ */ React.createElement("ul", { className: "clist", id: "inv-list" }, list.map((x) => {
+    var _a;
+    return /* @__PURE__ */ React.createElement("li", { key: x.code, "data-code": x.code, className: x.used_by ? "used" : "" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", { className: "mono" }, x.code), " ", /* @__PURE__ */ React.createElement("span", { className: "small muted" }, x.note ? x.note + " \xB7 " : "", x.used_by ? `\uC0AC\uC6A9\uB428 \xB7 ${((_a = PEOPLE[x.used_by]) == null ? void 0 : _a.name) || "\uAD00\uB9AC\uC790"} \xB7 ${srv.centerNames[x.center_id] || "\uC13C\uD130"}` : "\uC544\uC9C1 \uC548 \uC500")), !x.used_by && /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", disabled: busy, onClick: () => drop(x.code) }, "\uCDE8\uC18C"));
+  })) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uBC1C\uAE09\uD55C \uCF54\uB4DC\uAC00 \uC5C6\uC5B4\uC694.")), err && /* @__PURE__ */ React.createElement("p", { className: "small errtxt" }, err)));
+}
+function MasterMenu({ srv, onAccount, onClose }) {
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "mmenu-bg", onClick: onClose }), /* @__PURE__ */ React.createElement("div", { className: "mmenu", id: "master-menu", role: "menu" }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uB9C8\uC2A4\uD130 \xB7 \uC811\uC18D\uD560 \uAD00\uB9AC\uC790 \uACC4\uC815"), srv.centersAll.map((c) => /* @__PURE__ */ React.createElement("button", { key: c.id, role: "menuitem", className: "mitem" + (c.id === srv.act ? " on" : ""), "data-center": c.name, onClick: () => {
+    onClose();
+    if (c.id !== srv.act) srv.switchAct(c.id);
+  } }, /* @__PURE__ */ React.createElement("b", null, c.admins.join(", ") || "\uAD00\uB9AC\uC790 \uC5C6\uC74C"), /* @__PURE__ */ React.createElement("span", { className: "small muted" }, c.name, c.id === srv.act ? " \xB7 \uC811\uC18D \uC911" : ""))), /* @__PURE__ */ React.createElement("button", { className: "mitem acctitem", role: "menuitem", onClick: () => {
+    onClose();
+    onAccount();
+  } }, /* @__PURE__ */ React.createElement("b", null, "\uACC4\uC815 \xB7 \uC800\uC7A5"))));
 }
 function CenterCard({ m }) {
   const { srv } = useStore();
@@ -1175,15 +1280,15 @@ function AdminTab() {
   useEffect(() => {
     srv.sb.rpc("my_center_codes").then(({ data, error }) => {
       if (error) setErr(errMsg(error));
-      else setCodes((data || [])[0] || null);
+      else setCodes((data || []).find((c) => c.id === srv.act) || (data || [])[0] || null);
     });
-  }, []);
+  }, [srv.act]);
   const call = async (fn, args) => {
     setBusy(true);
     setErr("");
     await srv.flush();
     const { data, error } = await srv.sb.rpc(fn, args);
-    if (error) setErr(/self_role/.test(error.message || "") ? "\uB0B4 \uACC4\uC815\uC758 \uAD00\uB9AC\uC790 \uC5ED\uD560\uC740 \uC5EC\uAE30\uC11C \uBC14\uAFC0 \uC218 \uC5C6\uC5B4\uC694. \uB2E4\uB978 \uAD00\uB9AC\uC790\uAC00 \uBC14\uAFD4\uC57C \uD569\uB2C8\uB2E4." : errMsg(error));
+    if (error) setErr(/self_role/.test(error.message || "") ? "\uB0B4 \uACC4\uC815\uC758 \uAD00\uB9AC\uC790 \uC5ED\uD560\uC740 \uC5EC\uAE30\uC11C \uBC14\uAFC0 \uC218 \uC5C6\uC5B4\uC694." : errMsg(error));
     else await srv.reload();
     setBusy(false);
     return error ? null : data == null || data === "" ? true : data;
@@ -1204,15 +1309,15 @@ function AdminTab() {
   };
   const [bulkT, setBulkT] = useState("");
   const regen = async (kind) => {
-    const c = await call("regen_signup_code", { kind });
+    const c = await call("regen_signup_code", { kind, c: srv.act });
     if (c) setCodes({ ...codes, [kind + "_code"]: c });
   };
   const centerMembers = db.members.filter((m) => (m.centers || []).some((c) => adminIds.includes(c)));
   const list = sortMembers(centerMembers.filter((m) => matchMember(m, q)));
-  return /* @__PURE__ */ React.createElement("div", { className: "stack" }, codes && /* @__PURE__ */ React.createElement("p", { className: "small muted", id: "adm-center" }, "\uC13C\uD130: ", /* @__PURE__ */ React.createElement("b", null, codes.name)), /* @__PURE__ */ React.createElement("div", { id: "adm-view" }, /* @__PURE__ */ React.createElement(Seg, { value: view, options: [["staff", "\uAC15\uC0AC \uAD00\uB9AC"], ["assign", "\uD68C\uC6D0 \uBC30\uC815"], ["codes", "\uAC00\uC785 \uCF54\uB4DC"]], onChange: (v) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "stack" }, codes && /* @__PURE__ */ React.createElement("p", { className: "small muted", id: "adm-center" }, "\uC13C\uD130: ", /* @__PURE__ */ React.createElement("b", null, codes.name), srv.master ? " \xB7 \uB9C8\uC2A4\uD130\uB85C \uC811\uC18D \uC911" : ""), /* @__PURE__ */ React.createElement("div", { id: "adm-view" }, /* @__PURE__ */ React.createElement(Seg, { value: view, options: [["staff", "\uAC15\uC0AC \uAD00\uB9AC"], ["assign", "\uD68C\uC6D0 \uBC30\uC815"], ["codes", "\uAC00\uC785 \uCF54\uB4DC"], ...srv.master ? [["admins", "\uAD00\uB9AC\uC790 \uACC4\uC815"]] : []], onChange: (v) => {
     setView(v);
     setErr("");
-  } })), view === "staff" && /* @__PURE__ */ React.createElement(StaffAdmin, { trainers, call, assignMany, busy }), view === "codes" && /* @__PURE__ */ React.createElement(Card, { title: "\uAC00\uC785 \uCF54\uB4DC", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uAD00\uB9AC\uC790\xB7\uAC15\uC0AC \uAC00\uC785\uC5D0 \uD544\uC694") }, codes ? /* @__PURE__ */ React.createElement("div", { className: "codes" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uAC15\uC0AC \uAC00\uC785 \uCF54\uB4DC"), /* @__PURE__ */ React.createElement("b", { id: "trainer-code" }, codes.trainer_code), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", disabled: busy, onClick: () => regen("trainer") }, "\uC0C8\uB85C \uBC1C\uAE09")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uAD00\uB9AC\uC790 \uAC00\uC785 \uCF54\uB4DC"), /* @__PURE__ */ React.createElement("b", { id: "admin-code" }, codes.admin_code), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", disabled: busy, onClick: () => regen("admin") }, "\uC0C8\uB85C \uBC1C\uAE09"))) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uBD88\uB7EC\uC624\uB294 \uC911\u2026"), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC0C8 \uAC15\uC0AC\uC5D0\uAC8C \uAC15\uC0AC \uCF54\uB4DC\uB97C \uC54C\uB824 \uC8FC\uBA74 \uAC00\uC785\uD560 \uB54C \u2018\uAC15\uC0AC\u2019\uB97C \uACE0\uB974\uACE0 \uC774 \uCF54\uB4DC\uB97C \uB123\uC5B4 \uC774 \uC13C\uD130\uC5D0 \uB4E4\uC5B4\uC635\uB2C8\uB2E4. \uD68C\uC6D0\uC740 \uCF54\uB4DC \uC5C6\uC774 \uAC00\uC785\uD558\uACE0, \uD68C\uC6D0 \uD654\uBA74\uC758 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC13C\uD130\uC5D0 \uC5F0\uACB0\uD574\uC694. \uC0C8\uB85C \uBC1C\uAE09\uD558\uBA74 \uC608\uC804 \uCF54\uB4DC\uB294 \uB354 \uC774\uC0C1 \uC4F8 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4(\uC774\uBBF8 \uAC00\uC785\uD55C \uACC4\uC815\uC740 \uADF8\uB300\uB85C).")), view === "assign" && /* @__PURE__ */ React.createElement(Card, { title: "\uD68C\uC6D0 \uBC30\uC815", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, centerMembers.length, "\uBA85") }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uD55C \uD68C\uC6D0\uC5D0 \uAC15\uC0AC\uB97C \uC5EC\uB7EC \uBA85 \uBC30\uC815\uD560 \uC218 \uC788\uACE0, \uAC19\uC774 \uBC30\uC815\uB41C \uAC15\uC0AC\uB07C\uB9AC \uADF8 \uD68C\uC6D0\uC758 \uAE30\uB85D\uC744 \uD568\uAED8 \uBCF4\uACE0 \uC501\uB2C8\uB2E4. \uAC15\uC0AC \uCABD\uC5D0\uC11C \uBCF4\uB824\uBA74 \uAC15\uC0AC \uAD00\uB9AC\uC5D0\uC11C \uAC15\uC0AC\uB97C \uB204\uB974\uC138\uC694."), /* @__PURE__ */ React.createElement("button", { className: "btn small", "aria-label": "\uD68C\uC6D0 \uCD94\uAC00", onClick: openAdd }, "+ \uD68C\uC6D0 \uCD94\uAC00"), /* @__PURE__ */ React.createElement("div", { className: "bulk", id: "bulk" }, /* @__PURE__ */ React.createElement("b", { className: "small" }, "\uC5EC\uB7EC \uBA85 \uD55C \uBC88\uC5D0 \uBC30\uC815"), /* @__PURE__ */ React.createElement("select", { id: "bulk-t", value: bulkT, onChange: (e) => setBulkT(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uAC15\uC0AC \uACE0\uB974\uAE30"), sortMembers(trainers).map((t) => /* @__PURE__ */ React.createElement("option", { key: t.id, value: t.id }, t.name))), bulkT && /* @__PURE__ */ React.createElement(PickMembers, { key: bulkT, members: centerMembers.filter((m) => !(m.trainerIds || []).includes(bulkT)), who: staffNames(trainers, [bulkT]), busy, onAssign: (ids) => assignMany(bulkT, ids) })), centerMembers.length > 6 && /* @__PURE__ */ React.createElement("input", { className: "search", placeholder: "\uD68C\uC6D0 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), list.map((m) => {
+  } })), view === "admins" && srv.master && /* @__PURE__ */ React.createElement(MasterAdmins, null), view === "staff" && /* @__PURE__ */ React.createElement(StaffAdmin, { trainers, call, assignMany, busy }), view === "codes" && /* @__PURE__ */ React.createElement(Card, { title: "\uAC00\uC785 \uCF54\uB4DC", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uAC15\uC0AC \uAC00\uC785\uC5D0 \uD544\uC694") }, codes ? /* @__PURE__ */ React.createElement("div", { className: "codes" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uAC15\uC0AC \uAC00\uC785 \uCF54\uB4DC"), /* @__PURE__ */ React.createElement("b", { id: "trainer-code" }, codes.trainer_code), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", disabled: busy, onClick: () => regen("trainer") }, "\uC0C8\uB85C \uBC1C\uAE09"))) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uBD88\uB7EC\uC624\uB294 \uC911\u2026"), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC0C8 \uAC15\uC0AC\uC5D0\uAC8C \uAC15\uC0AC \uCF54\uB4DC\uB97C \uC54C\uB824 \uC8FC\uBA74 \uAC00\uC785\uD560 \uB54C \u2018\uAC15\uC0AC\u2019\uB97C \uACE0\uB974\uACE0 \uC774 \uCF54\uB4DC\uB97C \uB123\uC5B4 \uC774 \uC13C\uD130\uC5D0 \uB4E4\uC5B4\uC635\uB2C8\uB2E4. \uD68C\uC6D0\uC740 \uCF54\uB4DC \uC5C6\uC774 \uAC00\uC785\uD558\uACE0, \uD68C\uC6D0 \uD654\uBA74\uC758 \uCD08\uB300 \uCF54\uB4DC\uB85C \uC13C\uD130\uC5D0 \uC5F0\uACB0\uD574\uC694. \uC0C8\uB85C \uBC1C\uAE09\uD558\uBA74 \uC608\uC804 \uCF54\uB4DC\uB294 \uB354 \uC774\uC0C1 \uC4F8 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4(\uC774\uBBF8 \uAC00\uC785\uD55C \uACC4\uC815\uC740 \uADF8\uB300\uB85C). \uAD00\uB9AC\uC790 \uACC4\uC815\uC740 \uB9C8\uC2A4\uD130\uB9CC \uB9CC\uB4E4 \uC218 \uC788\uC5B4\uC694.")), view === "assign" && /* @__PURE__ */ React.createElement(Card, { title: "\uD68C\uC6D0 \uBC30\uC815", right: /* @__PURE__ */ React.createElement("span", { className: "muted small" }, centerMembers.length, "\uBA85") }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uD55C \uD68C\uC6D0\uC5D0 \uAC15\uC0AC\uB97C \uC5EC\uB7EC \uBA85 \uBC30\uC815\uD560 \uC218 \uC788\uACE0, \uAC19\uC774 \uBC30\uC815\uB41C \uAC15\uC0AC\uB07C\uB9AC \uADF8 \uD68C\uC6D0\uC758 \uAE30\uB85D\uC744 \uD568\uAED8 \uBCF4\uACE0 \uC501\uB2C8\uB2E4. \uAC15\uC0AC \uCABD\uC5D0\uC11C \uBCF4\uB824\uBA74 \uAC15\uC0AC \uAD00\uB9AC\uC5D0\uC11C \uAC15\uC0AC\uB97C \uB204\uB974\uC138\uC694."), /* @__PURE__ */ React.createElement("button", { className: "btn small", "aria-label": "\uD68C\uC6D0 \uCD94\uAC00", onClick: openAdd }, "+ \uD68C\uC6D0 \uCD94\uAC00"), /* @__PURE__ */ React.createElement("div", { className: "bulk", id: "bulk" }, /* @__PURE__ */ React.createElement("b", { className: "small" }, "\uC5EC\uB7EC \uBA85 \uD55C \uBC88\uC5D0 \uBC30\uC815"), /* @__PURE__ */ React.createElement("select", { id: "bulk-t", value: bulkT, onChange: (e) => setBulkT(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uAC15\uC0AC \uACE0\uB974\uAE30"), sortMembers(trainers).map((t) => /* @__PURE__ */ React.createElement("option", { key: t.id, value: t.id }, t.name))), bulkT && /* @__PURE__ */ React.createElement(PickMembers, { key: bulkT, members: centerMembers.filter((m) => !(m.trainerIds || []).includes(bulkT)), who: staffNames(trainers, [bulkT]), busy, onAssign: (ids) => assignMany(bulkT, ids) })), centerMembers.length > 6 && /* @__PURE__ */ React.createElement("input", { className: "search", placeholder: "\uD68C\uC6D0 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), list.map((m) => {
     const ids = m.trainerIds || [];
     const rest = trainers.filter((t) => !ids.includes(t.id));
     return /* @__PURE__ */ React.createElement("div", { key: m.id, className: "assign", "data-member": m.name }, /* @__PURE__ */ React.createElement("div", { className: "assign-h" }, /* @__PURE__ */ React.createElement("b", null, m.name), /* @__PURE__ */ React.createElement("span", { className: "pill" + (m.linked ? " ok" : "") }, m.linked ? "\uC571 \uC5F0\uACB0\uB428" : "\uCD08\uB300 " + (m.inviteCode || "\u2026"))), /* @__PURE__ */ React.createElement("div", { className: "chips" }, ids.map((id) => /* @__PURE__ */ React.createElement("span", { key: id, className: "chip t" }, staffNames(trainers, [id]), /* @__PURE__ */ React.createElement("button", { className: "x", "aria-label": "\uBC30\uC815 \uD574\uC81C", disabled: busy, onClick: () => call("unassign_trainer", { mid: m.id, tid: id }) }, "\xD7"))), !ids.length && /* @__PURE__ */ React.createElement("span", { className: "muted small" }, "\uB2F4\uB2F9 \uC5C6\uC74C"), rest.length > 0 && /* @__PURE__ */ React.createElement("select", { className: "assign-add", value: "", disabled: busy, onChange: (e) => e.target.value && call("assign_trainer", { mid: m.id, tid: e.target.value }) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "+ \uAC15\uC0AC \uBC30\uC815"), rest.map((t) => /* @__PURE__ */ React.createElement("option", { key: t.id, value: t.id }, t.name)))));
@@ -1330,7 +1435,7 @@ function atobSafe(s) {
 }
 function AccountSheet({ onClose, cfg, saveCfg, srv, sync, flush, local, goLogin, logout, localData, importLocal }) {
   const [showCfg, setShowCfg] = useState(!cfg);
-  return /* @__PURE__ */ React.createElement("div", { className: "sheet", role: "dialog", "aria-modal": "true" }, /* @__PURE__ */ React.createElement("div", { className: "sheet-h" }, /* @__PURE__ */ React.createElement("b", null, "\uACC4\uC815 \xB7 \uC800\uC7A5"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: onClose }, "\uB2EB\uAE30")), /* @__PURE__ */ React.createElement("div", { className: "sheet-b" }, /* @__PURE__ */ React.createElement("div", { className: "stack" }, srv ? /* @__PURE__ */ React.createElement(Card, { title: srv.profile.display_name || srv.user.email, right: /* @__PURE__ */ React.createElement(SyncBadge, { sync }) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, srv.user.email, " \xB7 ", ROLE_NAME[srv.profile.role] || "\uD68C\uC6D0"), sync.state === "error" && /* @__PURE__ */ React.createElement("p", { className: "small errtxt" }, sync.msg, " \uBC14\uB010 \uB0B4\uC6A9\uC740 \uC774 \uD654\uBA74\uC774 \uC5F4\uB824 \uC788\uB294 \uB3D9\uC548 \uAE30\uC5B5\uD558\uACE0 \uC788\uB2E4\uAC00 \uB2E4\uC2DC \uBCF4\uB0C5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row" }, sync.state === "error" && /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => srv.reload() }, "\uC11C\uBC84\uC5D0\uC11C \uC0C8\uB85C\uACE0\uCE68")), /* @__PURE__ */ React.createElement("button", { className: "btn wide logout", id: "acct-logout", onClick: logout }, "\uB85C\uADF8\uC544\uC6C3")) : /* @__PURE__ */ React.createElement(Card, { title: "\uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5 \uC911", right: /* @__PURE__ */ React.createElement(SyncBadge, { local: true }) }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uC9C0\uAE08\uC740 \uAE30\uB85D\uC774 \uC774 \uBE0C\uB77C\uC6B0\uC800 \uC548\uC5D0\uB9CC \uC788\uC2B5\uB2C8\uB2E4. \uC11C\uBC84\uC5D0 \uC5F0\uACB0\uD558\uACE0 \uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uAE30\uB85D\uC744 \uBCF4\uACE0, \uD68C\uC6D0\uB3C4 \uC790\uAE30 \uACC4\uC815\uC73C\uB85C \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4."), cfg && /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: goLogin }, "\uB85C\uADF8\uC778\uD558\uAE30")), srv && localData && /* @__PURE__ */ React.createElement(Card, { title: "\uC774 \uAE30\uAE30\uC5D0 \uC788\uB358 \uAE30\uB85D \uC62C\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uB85C\uADF8\uC778 \uC804\uC5D0 \uC774 \uAE30\uAE30\uC5D0 \uC800\uC7A5\uD55C \uD68C\uC6D0 ", localData.members.length, "\uBA85(\uC778\uBC14\uB514 ", localData.measurements.length, "\uD68C, \uC6B4\uB3D9 ", localData.sessions.length, "\uD68C)\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uC11C\uBC84\uB85C \uC62E\uAE30\uBA74 \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: importLocal }, "\uC11C\uBC84\uB85C \uC62C\uB9AC\uAE30")), /* @__PURE__ */ React.createElement(Card, { title: "\uC11C\uBC84 \uC124\uC815", right: cfg ? /* @__PURE__ */ React.createElement("span", { className: "pill ok" }, "\uC124\uC815\uB428") : /* @__PURE__ */ React.createElement("span", { className: "pill" }, "\uC5C6\uC74C"), onClick: showCfg ? void 0 : () => setShowCfg(true) }, showCfg ? /* @__PURE__ */ React.createElement(ServerSettings, { cfg, onSave: saveCfg }) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, cfg.url, " \xB7 \uBC14\uAFB8\uB824\uBA74 \uB204\uB974\uC138\uC694")))));
+  return /* @__PURE__ */ React.createElement("div", { className: "sheet", role: "dialog", "aria-modal": "true" }, /* @__PURE__ */ React.createElement("div", { className: "sheet-h" }, /* @__PURE__ */ React.createElement("b", null, "\uACC4\uC815 \xB7 \uC800\uC7A5"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: onClose }, "\uB2EB\uAE30")), /* @__PURE__ */ React.createElement("div", { className: "sheet-b" }, /* @__PURE__ */ React.createElement("div", { className: "stack" }, srv ? /* @__PURE__ */ React.createElement(Card, { title: srv.profile.display_name || srv.user.email, right: /* @__PURE__ */ React.createElement(SyncBadge, { sync }) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, srv.user.email, " \xB7 ", srv.master ? `\uB9C8\uC2A4\uD130 \xB7 ${srv.centerNames[srv.act] || "\uC13C\uD130"} \uAD00\uB9AC\uC790\uB85C \uC811\uC18D \uC911` : ROLE_NAME[srv.profile.role] || "\uD68C\uC6D0"), sync.state === "error" && /* @__PURE__ */ React.createElement("p", { className: "small errtxt" }, sync.msg, " \uBC14\uB010 \uB0B4\uC6A9\uC740 \uC774 \uD654\uBA74\uC774 \uC5F4\uB824 \uC788\uB294 \uB3D9\uC548 \uAE30\uC5B5\uD558\uACE0 \uC788\uB2E4\uAC00 \uB2E4\uC2DC \uBCF4\uB0C5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("div", { className: "row" }, sync.state === "error" && /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => srv.reload() }, "\uC11C\uBC84\uC5D0\uC11C \uC0C8\uB85C\uACE0\uCE68")), /* @__PURE__ */ React.createElement("button", { className: "btn wide logout", id: "acct-logout", onClick: logout }, "\uB85C\uADF8\uC544\uC6C3")) : /* @__PURE__ */ React.createElement(Card, { title: "\uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5 \uC911", right: /* @__PURE__ */ React.createElement(SyncBadge, { local: true }) }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uC9C0\uAE08\uC740 \uAE30\uB85D\uC774 \uC774 \uBE0C\uB77C\uC6B0\uC800 \uC548\uC5D0\uB9CC \uC788\uC2B5\uB2C8\uB2E4. \uC11C\uBC84\uC5D0 \uC5F0\uACB0\uD558\uACE0 \uB85C\uADF8\uC778\uD558\uBA74 PC\xB7\uD734\uB300\uD3F0 \uC5B4\uB514\uC11C\uB4E0 \uAC19\uC740 \uAE30\uB85D\uC744 \uBCF4\uACE0, \uD68C\uC6D0\uB3C4 \uC790\uAE30 \uACC4\uC815\uC73C\uB85C \uBCFC \uC218 \uC788\uC2B5\uB2C8\uB2E4."), cfg && /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: goLogin }, "\uB85C\uADF8\uC778\uD558\uAE30")), srv && srv.profile.role === "member" && !srv.wantAdmin && /* @__PURE__ */ React.createElement("details", { className: "acct-admin", id: "acct-admin" }, /* @__PURE__ */ React.createElement("summary", { className: "small" }, "\uAD00\uB9AC\uC790 \uCD08\uB300 \uCF54\uB4DC\uAC00 \uC788\uB098\uC694?"), /* @__PURE__ */ React.createElement(AdminActivate, null)), srv && localData && /* @__PURE__ */ React.createElement(Card, { title: "\uC774 \uAE30\uAE30\uC5D0 \uC788\uB358 \uAE30\uB85D \uC62C\uB9AC\uAE30" }, /* @__PURE__ */ React.createElement("p", { className: "small" }, "\uB85C\uADF8\uC778 \uC804\uC5D0 \uC774 \uAE30\uAE30\uC5D0 \uC800\uC7A5\uD55C \uD68C\uC6D0 ", localData.members.length, "\uBA85(\uC778\uBC14\uB514 ", localData.measurements.length, "\uD68C, \uC6B4\uB3D9 ", localData.sessions.length, "\uD68C)\uC774 \uC788\uC2B5\uB2C8\uB2E4. \uC11C\uBC84\uB85C \uC62E\uAE30\uBA74 \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: importLocal }, "\uC11C\uBC84\uB85C \uC62C\uB9AC\uAE30")), /* @__PURE__ */ React.createElement(Card, { title: "\uC11C\uBC84 \uC124\uC815", right: cfg ? /* @__PURE__ */ React.createElement("span", { className: "pill ok" }, "\uC124\uC815\uB428") : /* @__PURE__ */ React.createElement("span", { className: "pill" }, "\uC5C6\uC74C"), onClick: showCfg ? void 0 : () => setShowCfg(true) }, showCfg ? /* @__PURE__ */ React.createElement(ServerSettings, { cfg, onSave: saveCfg }) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, cfg.url, " \xB7 \uBC14\uAFB8\uB824\uBA74 \uB204\uB974\uC138\uC694")))));
 }
 const fmt = (x, d = 0) => x == null || isNaN(x) ? "\u2014" : Number(x).toLocaleString("ko-KR", { maximumFractionDigits: d, minimumFractionDigits: d });
 function Card({ title, right, children, onClick, tone }) {
@@ -1532,7 +1637,7 @@ const recCenterFor = (srv, m) => {
 const stampRec = (srv, m) => srv ? { centerId: recCenterFor(srv, m), by: srv.user.id, createdAt: (/* @__PURE__ */ new Date()).toISOString(), isPublic: true } : {};
 const recAge = (r) => r.createdAt ? (Date.now() - new Date(r.createdAt).getTime()) / 864e5 : 0;
 const canEditRec = (srv, r, m) => {
-  if (!srv) return true;
+  if (!srv || srv.master) return true;
   if (!r.centerId) return !!(m && m.mine) && (!r.by || r.by === srv.user.id);
   const c = srv.myCenters.find((x) => x.id === r.centerId);
   if (!c) return false;
@@ -1678,13 +1783,14 @@ const musNames = (ks) => (ks || []).map((k) => {
   return (_a = MUSCLES[k]) == null ? void 0 : _a.name;
 }).filter(Boolean).join("\xB7");
 function canEditEx(srv, e) {
-  return !srv || !!e.by && e.by === srv.user.id;
+  return !srv || !e.tpl && (srv.master || !!e.by && e.by === srv.user.id);
 }
 const exBy = (srv, e) => {
-  if (!e.by) return "\uAE30\uBCF8 \uC6B4\uB3D9";
-  if (!srv || e.by === srv.user.id) return "\uB0B4\uAC00 \uCD94\uAC00";
+  const cn = srv && e.center && srv.profile.role === "member" && (srv.memCenters || []).length > 1 ? (srv.centerNames[e.center] || "\uC13C\uD130") + " \xB7 " : "";
+  if (!e.by || e.base) return cn + "\uAE30\uBCF8 \uC6B4\uB3D9";
+  if (!srv || e.by === srv.user.id) return cn + "\uB0B4\uAC00 \uCD94\uAC00";
   const p = PEOPLE[e.by];
-  return `${(p == null ? void 0 : p.name) || "\uB2E4\uB978 \uC0AC\uB78C"} ${ROLE_NAME[p == null ? void 0 : p.role] || ""} \uCD94\uAC00`.replace(/\s+추가$/, " \uCD94\uAC00");
+  return cn + `${(p == null ? void 0 : p.name) || "\uB2E4\uB978 \uC0AC\uB78C"} ${ROLE_NAME[p == null ? void 0 : p.role] || ""} \uCD94\uAC00`.replace(/\s+추가$/, " \uCD94\uAC00");
 };
 function MusclePicks({ value, onChange, other = [] }) {
   return /* @__PURE__ */ React.createElement("div", { className: "chips" }, Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement(
@@ -1714,7 +1820,7 @@ function ExerciseEditor({ e, uses, onDone }) {
   };
   return /* @__PURE__ */ React.createElement("div", { className: "exedit", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ React.createElement(Field, { label: "\uC6B4\uB3D9 \uC774\uB984" }, /* @__PURE__ */ React.createElement("input", { id: "ex-name", value: e.name, onChange: (ev) => set({ name: ev.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC8FC \uBD80\uC704"), /* @__PURE__ */ React.createElement(MusclePicks, { value: e.p || [], other: e.s || [], onChange: (v) => set({ p: v }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uBCF4\uC870 \uBD80\uC704"), /* @__PURE__ */ React.createElement(MusclePicks, { value: e.s || [], other: e.p || [], onChange: (v) => set({ s: v }) }), /* @__PURE__ */ React.createElement("em", null, "\uC8FC \uBD80\uC704\uB294 \uC138\uD2B8 \uC218 \uADF8\uB300\uB85C, \uBCF4\uC870 \uBD80\uC704\uB294 \uC808\uBC18\uC73C\uB85C \uC8FC\uAC04 \uBCFC\uB968\xB7\uD68C\uBCF5\uC5D0 \uBC18\uC601\uB429\uB2C8\uB2E4")), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC6B4\uB3D9 \uB3C4\uAD6C"), /* @__PURE__ */ React.createElement("div", { className: "chips", id: "ex-eq" }, eqFor(exCat(e)).map((q) => /* @__PURE__ */ React.createElement("button", { key: q, type: "button", className: "chip tog" + (e.eq === q ? " on" : ""), "aria-pressed": e.eq === q, onClick: () => set({ eq: e.eq === q ? "" : q }) }, q)))), /* @__PURE__ */ React.createElement(Field, { label: "\uC790\uC138 \uD3EC\uC778\uD2B8 \xB7 \uC124\uBA85" }, /* @__PURE__ */ React.createElement("textarea", { id: "ex-note", rows: "2", placeholder: exCat(e) === "pilates" ? "\uC608: \uC2A4\uD504\uB9C1 \uB808\uB4DC 2\uAC1C, \uACE8\uBC18 \uC911\uB9BD \uC720\uC9C0\uD558\uACE0 \uC228 \uB0B4\uC26C\uBA70 \uBC00\uAE30" : "\uC608: \uACAC\uAC11\uC744 \uBAA8\uC73C\uACE0 \uBC14\uB97C \uAC00\uC2B4 \uC544\uB798\uCABD\uC73C\uB85C", value: e.note || "", onChange: (ev) => set({ note: ev.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "field" }, /* @__PURE__ */ React.createElement("span", null, "\uC2DC\uBC94 \uC0AC\uC9C4 \xB7 \uC601\uC0C1"), /* @__PURE__ */ React.createElement(MediaThumbs, { items: e.media, onRemove: (i) => set({ media: e.media.filter((_, j) => j !== i) }) }), /* @__PURE__ */ React.createElement(MediaPicker, { folder: "lib/" + e.id, onAdd: (it) => update((x) => {
     x.exercises = x.exercises.map((y) => y.id === e.id ? { ...y, media: [...y.media || [], it] } : y);
-  }) })), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: onDone }, "\uC644\uB8CC"), !ask ? /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(true) }, "\uC774 \uC6B4\uB3D9 \uC0AD\uC81C") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "small" }, uses ? `\uC9C0\uB09C \uAE30\uB85D ${uses}\uD68C\uB294 \uADF8\uB300\uB85C \uB0A8\uACE0, ` : "", "\uBAA9\uB85D\uC5D0\uC11C\uB9CC \uBE60\uC9D1\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("button", { className: "btn danger small", onClick: del }, "\uC0AD\uC81C"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(false) }, "\uCDE8\uC18C"))), srv && /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uACE0\uCE5C \uB0B4\uC6A9\uC740 \uBC14\uB85C \uC800\uC7A5\uB418\uACE0, \uBAA8\uB4E0 \uAC15\uC0AC\xB7\uD68C\uC6D0\uC758 \uC6B4\uB3D9 \uBAA9\uB85D\uC5D0 \uAC19\uC774 \uBC18\uC601\uB429\uB2C8\uB2E4."));
+  }) })), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "btn small", onClick: onDone }, "\uC644\uB8CC"), !ask ? /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(true) }, "\uC774 \uC6B4\uB3D9 \uC0AD\uC81C") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "small" }, uses ? `\uC9C0\uB09C \uAE30\uB85D ${uses}\uD68C\uB294 \uADF8\uB300\uB85C \uB0A8\uACE0, ` : "", "\uBAA9\uB85D\uC5D0\uC11C\uB9CC \uBE60\uC9D1\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("button", { className: "btn danger small", onClick: del }, "\uC0AD\uC81C"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => setAsk(false) }, "\uCDE8\uC18C"))), srv && /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uACE0\uCE5C \uB0B4\uC6A9\uC740 \uBC14\uB85C \uC800\uC7A5\uB418\uACE0, ", e.center ? "\uC774 \uC13C\uD130 \uAC15\uC0AC\xB7\uD68C\uC6D0" : "\uB098\uC640 \uC5F0\uACB0\uB41C \uAC15\uC0AC", "\uC758 \uC6B4\uB3D9 \uBAA9\uB85D\uC5D0 \uAC19\uC774 \uBC18\uC601\uB429\uB2C8\uB2E4."));
 }
 function ExerciseLibrary({ d, cat = "gym" }) {
   const { db, update, srv, favs = [], toggleFav } = useStore();
@@ -1752,15 +1858,15 @@ function ExerciseLibrary({ d, cat = "gym" }) {
     }
     const id = "x" + uid();
     update((x) => {
-      x.exercises = [...x.exercises || [], { id, name: nm, cat, p: [], s: [], eq: "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null }];
+      x.exercises = [...x.exercises || [], { id, name: nm, cat, p: [], s: [], eq: "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null, center: srv && isStaff(srv) ? srv.act : null }];
     });
     setName("");
     setQ("");
     setOpen(id);
   };
-  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: `${catName} \uC6B4\uB3D9 \uCD94\uAC00` }, /* @__PURE__ */ React.createElement("div", { className: "addbar flat" }, /* @__PURE__ */ React.createElement("input", { id: "ex-new", placeholder: `\uC6B4\uB3D9 \uC774\uB984\uB9CC \uC368\uB3C4 \uCD94\uAC00\uB3FC\uC694 (\uC608: ${cat === "pilates" ? "\uD2F0\uC800" : "\uCF00\uD2C0\uBCA8 \uC2A4\uC719"})`, value: name, onChange: (e) => setName(e.target.value), onKeyDown: (e) => e.key === "Enter" && add() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: add, disabled: !name.trim() }, "\uCD94\uAC00")), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uCD94\uAC00\uD55C \uB4A4 \uBD80\uC704\xB7\uB3C4\uAD6C\xB7\uC124\uBA85\xB7\uC2DC\uBC94 \uC601\uC0C1\uC740 \uC544\uB798\uC5D0\uC11C \uC5B8\uC81C\uB4E0 \uCC44\uC6B8 \uC218 \uC788\uC5B4\uC694. \uAC19\uC740 \uC774\uB984\uC774 \uC774\uBBF8 \uC788\uC73C\uBA74 \uADF8 \uC6B4\uB3D9\uC744 \uC5F4\uC5B4 \uC90D\uB2C8\uB2E4. \uCD94\uAC00\uD55C \uC6B4\uB3D9\uC740 \uC5F0\uACB0\uB41C \uAC15\uC0AC\xB7\uAD00\uB9AC\uC790\xB7\uD68C\uC6D0\uACFC \uD568\uAED8 \uBCF4\uACE0, \uACE0\uCE58\uAC70\uB098 \uC9C0\uC6B0\uB294 \uAC74 \uCD94\uAC00\uD55C \uC0AC\uB78C\uB9CC \uD560 \uC218 \uC788\uC5B4\uC694.")), /* @__PURE__ */ React.createElement(Card, { title: `${catName} \uC6B4\uB3D9 \uBAA9\uB85D \xB7 ${all.length}\uAC1C`, right: /* @__PURE__ */ React.createElement("span", { className: "muted small", id: "fav-n" }, "\u2605 ", favN, "/", FAV_MAX) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uBCC4\uC744 \uB204\uB974\uBA74 \uC990\uACA8\uCC3E\uAE30(\uCD5C\uB300 ", FAV_MAX, "\uAC1C)\uAC00 \uB3FC\uC694. \uBAA9\uB85D \uB9E8 \uC704, \uAE30\uB85D\uD558\uAE30, 1RM \uACC4\uC0B0\uC5D0\uC11C \uBA3C\uC800 \uBCF4\uC785\uB2C8\uB2E4."), favMsg && /* @__PURE__ */ React.createElement("p", { className: "warn small", id: "fav-msg" }, favMsg), /* @__PURE__ */ React.createElement("input", { id: "ex-q", className: "search", type: "search", placeholder: "\uC6B4\uB3D9 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), /* @__PURE__ */ React.createElement("div", { className: "row wrap exfilter" }, /* @__PURE__ */ React.createElement("select", { id: "ex-fmus", value: mus, onChange: (e) => setMus(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uBD80\uC704"), Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.name))), /* @__PURE__ */ React.createElement("select", { id: "ex-feq", value: eq, onChange: (e) => setEq(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uB3C4\uAD6C"), eqFor(cat).map((x) => /* @__PURE__ */ React.createElement("option", { key: x }, x)))), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uC870\uAC74\uC5D0 \uB9DE\uB294 \uC6B4\uB3D9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("ul", { className: "mlist" }, list.map((e) => {
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { title: `${catName} \uC6B4\uB3D9 \uCD94\uAC00` }, /* @__PURE__ */ React.createElement("div", { className: "addbar flat" }, /* @__PURE__ */ React.createElement("input", { id: "ex-new", placeholder: `\uC6B4\uB3D9 \uC774\uB984\uB9CC \uC368\uB3C4 \uCD94\uAC00\uB3FC\uC694 (\uC608: ${cat === "pilates" ? "\uD2F0\uC800" : "\uCF00\uD2C0\uBCA8 \uC2A4\uC719"})`, value: name, onChange: (e) => setName(e.target.value), onKeyDown: (e) => e.key === "Enter" && add() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: add, disabled: !name.trim() }, "\uCD94\uAC00")), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uCD94\uAC00\uD55C \uB4A4 \uBD80\uC704\xB7\uB3C4\uAD6C\xB7\uC124\uBA85\xB7\uC2DC\uBC94 \uC601\uC0C1\uC740 \uC544\uB798\uC5D0\uC11C \uC5B8\uC81C\uB4E0 \uCC44\uC6B8 \uC218 \uC788\uC5B4\uC694. \uAC19\uC740 \uC774\uB984\uC774 \uC774\uBBF8 \uC788\uC73C\uBA74 \uADF8 \uC6B4\uB3D9\uC744 \uC5F4\uC5B4 \uC90D\uB2C8\uB2E4. \uC6B4\uB3D9 \uBAA9\uB85D\uC740 \uC13C\uD130\uB9C8\uB2E4 \uB530\uB85C\uC608\uC694. \uCD94\uAC00\uD55C \uC6B4\uB3D9\uC740 \uAC19\uC740 \uC13C\uD130 \uAC15\uC0AC\xB7\uAD00\uB9AC\uC790\uC640 \uC5F0\uACB0\uB41C \uD68C\uC6D0\uC774 \uD568\uAED8 \uBCF4\uACE0, \uACE0\uCE58\uAC70\uB098 \uC9C0\uC6B0\uB294 \uAC74 \uCD94\uAC00\uD55C \uC0AC\uB78C\uB9CC \uD560 \uC218 \uC788\uC5B4\uC694.")), /* @__PURE__ */ React.createElement(Card, { title: `${catName} \uC6B4\uB3D9 \uBAA9\uB85D \xB7 ${all.length}\uAC1C`, right: /* @__PURE__ */ React.createElement("span", { className: "muted small", id: "fav-n" }, "\u2605 ", favN, "/", FAV_MAX) }, /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uBCC4\uC744 \uB204\uB974\uBA74 \uC990\uACA8\uCC3E\uAE30(\uCD5C\uB300 ", FAV_MAX, "\uAC1C)\uAC00 \uB3FC\uC694. \uBAA9\uB85D \uB9E8 \uC704, \uAE30\uB85D\uD558\uAE30, 1RM \uACC4\uC0B0\uC5D0\uC11C \uBA3C\uC800 \uBCF4\uC785\uB2C8\uB2E4."), favMsg && /* @__PURE__ */ React.createElement("p", { className: "warn small", id: "fav-msg" }, favMsg), /* @__PURE__ */ React.createElement("input", { id: "ex-q", className: "search", type: "search", placeholder: "\uC6B4\uB3D9 \uC774\uB984 \uAC80\uC0C9", value: q, onChange: (e) => setQ(e.target.value) }), /* @__PURE__ */ React.createElement("div", { className: "row wrap exfilter" }, /* @__PURE__ */ React.createElement("select", { id: "ex-fmus", value: mus, onChange: (e) => setMus(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uBD80\uC704"), Object.entries(MUSCLES).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.name))), /* @__PURE__ */ React.createElement("select", { id: "ex-feq", value: eq, onChange: (e) => setEq(e.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\uBAA8\uB4E0 \uB3C4\uAD6C"), eqFor(cat).map((x) => /* @__PURE__ */ React.createElement("option", { key: x }, x)))), list.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uC870\uAC74\uC5D0 \uB9DE\uB294 \uC6B4\uB3D9\uC774 \uC5C6\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement("ul", { className: "mlist" }, list.map((e) => {
     const isOpen = open === e.id, can = canEditEx(srv, e);
-    return /* @__PURE__ */ React.createElement("li", { key: e.id, className: "exrow" + (isOpen ? " open" : ""), "data-ex": e.name }, /* @__PURE__ */ React.createElement("div", { className: "exhead" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "star" + (favs.includes(e.id) ? " on" : ""), "aria-pressed": favs.includes(e.id), "aria-label": e.name + " \uC990\uACA8\uCC3E\uAE30", onClick: () => star(e) }, favs.includes(e.id) ? "\u2605" : "\u2606"), /* @__PURE__ */ React.createElement("button", { className: "mrow", onClick: () => setOpen(isOpen ? null : e.id), "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement("span", { className: "mname" }, e.name), /* @__PURE__ */ React.createElement("span", { className: "muted small mlast" }, /* @__PURE__ */ React.createElement("span", { className: "tag by" + (e.by && srv && e.by === srv.user.id ? " me" : "") }, exBy(srv, e)), uses[e.id] ? ` \uAE30\uB85D ${uses[e.id]}\uD68C` : "", (e.media || []).length ? ` \xB7 \uC601\uC0C1/\uC0AC\uC9C4 ${(e.media || []).length}` : ""), /* @__PURE__ */ React.createElement("span", { className: "muted small" }, musNames(e.p) || "\uBD80\uC704 \uBBF8\uC815", (e.s || []).length ? ` (+${musNames(e.s)})` : "", e.eq ? /* @__PURE__ */ React.createElement("span", { className: "tag eq" }, e.eq) : null))), isOpen && (can ? /* @__PURE__ */ React.createElement(ExerciseEditor, { e, uses: uses[e.id] || 0, onDone: () => setOpen(null) }) : /* @__PURE__ */ React.createElement("div", { className: "exedit" }, e.note && /* @__PURE__ */ React.createElement("p", { className: "note" }, e.note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: e.media }), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, e.by ? "\uCD94\uAC00\uD55C \uC0AC\uB78C\uB9CC \uACE0\uCE58\uAC70\uB098 \uC9C0\uC6B8 \uC218 \uC788\uC5B4\uC694." : "\uAE30\uBCF8 \uC6B4\uB3D9\uC740 \uACE0\uCE60 \uC218 \uC5C6\uC5B4\uC694. \uB0B4 \uC6B4\uB3D9\uC73C\uB85C \uC0C8\uB85C \uCD94\uAC00\uD574 \uC4F0\uC138\uC694."))));
+    return /* @__PURE__ */ React.createElement("li", { key: e.id, className: "exrow" + (isOpen ? " open" : ""), "data-ex": e.name }, /* @__PURE__ */ React.createElement("div", { className: "exhead" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "star" + (favs.includes(e.id) ? " on" : ""), "aria-pressed": favs.includes(e.id), "aria-label": e.name + " \uC990\uACA8\uCC3E\uAE30", onClick: () => star(e) }, favs.includes(e.id) ? "\u2605" : "\u2606"), /* @__PURE__ */ React.createElement("button", { className: "mrow", onClick: () => setOpen(isOpen ? null : e.id), "aria-expanded": isOpen }, /* @__PURE__ */ React.createElement("span", { className: "mname" }, e.name), /* @__PURE__ */ React.createElement("span", { className: "muted small mlast" }, /* @__PURE__ */ React.createElement("span", { className: "tag by" + (e.by && srv && e.by === srv.user.id ? " me" : "") }, exBy(srv, e)), uses[e.id] ? ` \uAE30\uB85D ${uses[e.id]}\uD68C` : "", (e.media || []).length ? ` \xB7 \uC601\uC0C1/\uC0AC\uC9C4 ${(e.media || []).length}` : ""), /* @__PURE__ */ React.createElement("span", { className: "muted small" }, musNames(e.p) || "\uBD80\uC704 \uBBF8\uC815", (e.s || []).length ? ` (+${musNames(e.s)})` : "", e.eq ? /* @__PURE__ */ React.createElement("span", { className: "tag eq" }, e.eq) : null))), isOpen && (can ? /* @__PURE__ */ React.createElement(ExerciseEditor, { e, uses: uses[e.id] || 0, onDone: () => setOpen(null) }) : /* @__PURE__ */ React.createElement("div", { className: "exedit" }, e.note && /* @__PURE__ */ React.createElement("p", { className: "note" }, e.note), /* @__PURE__ */ React.createElement(MediaThumbs, { items: e.media }), /* @__PURE__ */ React.createElement("p", { className: "small muted" }, e.tpl ? "\uAE30\uBCF8 \uC6B4\uB3D9\uC740 \uC13C\uD130\uC640 \uC5F0\uACB0\uD558\uBA74 \uADF8 \uC13C\uD130 \uBAA9\uB85D\uC73C\uB85C \uC368\uC694. \uB0B4 \uC6B4\uB3D9\uC740 \uC0C8\uB85C \uCD94\uAC00\uD574 \uC4F0\uC138\uC694." : "\uCD94\uAC00\uD55C \uC0AC\uB78C\uB9CC \uACE0\uCE58\uAC70\uB098 \uC9C0\uC6B8 \uC218 \uC788\uC5B4\uC694."))));
   }))));
 }
 function ReviewList({ d, cat = "gym" }) {
@@ -1825,7 +1931,7 @@ function LogView({ d, preset, clearPreset }) {
       if (!nm) return;
       ex = (db.exercises || []).find((e) => exCat(e) === pcat && e.name.replace(/\s/g, "") === nm.replace(/\s/g, ""));
       if (!ex) {
-        ex = { id: "x" + uid(), name: nm, cat: pcat, p: custom.muscle ? [custom.muscle] : [], s: [], eq: custom.eq || "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null };
+        ex = { id: "x" + uid(), name: nm, cat: pcat, p: custom.muscle ? [custom.muscle] : [], s: [], eq: custom.eq || "", note: "", media: [], by: (srv == null ? void 0 : srv.user.id) || null, center: srv && isStaff(srv) ? srv.act : null };
         const nx = ex;
         update((x) => {
           x.exercises = [...x.exercises || [], nx];
@@ -2029,7 +2135,8 @@ function App() {
   const [session, setSession] = useState(void 0);
   const [profile, setProfile] = useState(null);
   const [staff, setStaff] = useState([]);
-  const [smeta, setSmeta] = useState({ people: {}, centerNames: {}, myCenters: [] });
+  const [smeta, setSmeta] = useState({ people: {}, centerNames: {}, myCenters: [], centersAll: [], extraEx: [] });
+  const [menu, setMenu] = useState(false);
   const [toast, setToast] = useState("");
   useEffect(() => {
     const f = (e) => {
@@ -2087,7 +2194,7 @@ function App() {
       lastLoad.current = Date.now();
       setProfile(r.profile);
       setStaff(r.staff);
-      setSmeta({ people: r.people, centerNames: r.centerNames, myCenters: r.myCenters });
+      setSmeta({ people: r.people, centerNames: r.centerNames, myCenters: r.myCenters, master: r.master, act: r.act, centersAll: r.centersAll, memCenters: r.memCenters, extraEx: r.extraEx, wantAdmin: r.wantAdmin });
       setDB(r.db);
       setSync({ state: "saved", at: Date.now() });
     } catch (e) {
@@ -2181,7 +2288,7 @@ function App() {
     next.sample = false;
     return next;
   });
-  setCatalog(db.exercises);
+  setCatalog(db.server ? [...smeta.extraEx || [], ...db.exercises || []] : db.exercises);
   setPeople(smeta.people);
   const d = useMemo(() => derive(db, db.activeId), [db]);
   const [mview, setMview] = useState("list");
@@ -2196,7 +2303,7 @@ function App() {
     if (!newName.trim()) return;
     const id = uid();
     update((x) => {
-      x.members.push({ id, name: newName.trim(), sex: "M", birth: "1995-01-01", phone: "", goal: "maintain", restingHR: "", hrFormula: "tanaka", zoneMethod: "karvonen", activityMode: "auto", activityManual: 1.55, meals: 4, memo: "" });
+      x.members.push({ id, name: newName.trim(), ...mode === "server" && smeta.act ? { _center: smeta.act } : {}, sex: "M", birth: "1995-01-01", phone: "", goal: "maintain", restingHR: "", hrFormula: "tanaka", zoneMethod: "karvonen", activityMode: "auto", activityManual: 1.55, meals: 4, memo: "" });
       x.activeId = id;
     });
     setNewName("");
@@ -2248,7 +2355,14 @@ function App() {
     lsSet(UPLOADED_KEY, "1");
     bump((n) => n + 1);
   };
-  const srv = mode === "server" ? { sb, user: session.user, profile, staff, reload, flush, ...smeta } : null;
+  const switchAct = async (id) => {
+    await flush();
+    lsSet(ACT_KEY, id);
+    lsSet(ACTIVE_KEY, null);
+    setMview("list");
+    await reload();
+  };
+  const srv = mode === "server" ? { sb, user: session.user, profile, staff, reload, flush, switchAct, ...smeta } : null;
   const favs = mode === "server" ? profile.fav_exercises || [] : favLocal;
   const setFavs = (ids) => {
     if (mode === "server") {
@@ -2283,7 +2397,8 @@ function App() {
   if (mode === "checking" || mode === "loading") return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("main", { className: "main" }, /* @__PURE__ */ React.createElement("div", { className: "stack authwrap" }, /* @__PURE__ */ React.createElement(Card, { title: sync.state === "error" ? "\uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4" : "\uBD88\uB7EC\uC624\uB294 \uC911\u2026" }, sync.state === "error" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "small errtxt" }, sync.msg), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: reload }, "\uB2E4\uC2DC \uC2DC\uB3C4"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: logout }, "\uB85C\uADF8\uC544\uC6C3"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: useLocal }, "\uC774 \uAE30\uAE30\uC5D0\uC11C\uB9CC \uC4F0\uAE30"))) : /* @__PURE__ */ React.createElement("p", { className: "small muted" }, "\uC11C\uBC84\uC5D0\uC11C \uD68C\uC6D0 \uAE30\uB85D\uC744 \uAC00\uC838\uC624\uACE0 \uC788\uC2B5\uB2C8\uB2E4.")))));
   if (mode === "auth") return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(AuthScreen, { sb, onLocal: useLocal, onSettings: () => setAcct(true) }), acct && /* @__PURE__ */ React.createElement(AccountSheet, { onClose: () => setAcct(false), cfg, saveCfg, sync }));
   const body = () => {
-    if (tab === "admin" && role === "admin") return /* @__PURE__ */ React.createElement(AdminTab, null);
+    if (tab === "admin" && role === "admin") return /* @__PURE__ */ React.createElement(AdminTab, { key: smeta.act || "" });
+    if (role === "member" && smeta.wantAdmin && !d) return /* @__PURE__ */ React.createElement("div", { className: "stack" }, /* @__PURE__ */ React.createElement(AdminActivate, null), /* @__PURE__ */ React.createElement("p", { className: "small muted center" }, "\uCF54\uB4DC\uAC00 \uC544\uC9C1 \uC5C6\uB2E4\uBA74 \uB9C8\uC2A4\uD130\uC5D0\uAC8C \uC694\uCCAD\uD558\uC138\uC694. \uD65C\uC131\uD654 \uC804\uC5D0\uB294 \uAD00\uB9AC\uC790 \uAE30\uB2A5\uC774 \uC5F4\uB9AC\uC9C0 \uC54A\uC544\uC694."));
     if (!d) {
       if (role === "member") return /* @__PURE__ */ React.createElement(MemberStart, null);
       return /* @__PURE__ */ React.createElement(Card, { title: "\uD68C\uC6D0\uC774 \uC5C6\uC2B5\uB2C8\uB2E4", right: /* @__PURE__ */ React.createElement("button", { className: "btn small", "aria-label": "\uD68C\uC6D0 \uCD94\uAC00", onClick: () => setAdding(true) }, "+ \uD68C\uC6D0 \uCD94\uAC00") }, /* @__PURE__ */ React.createElement("p", { className: "muted" }, "+ \uD68C\uC6D0 \uCD94\uAC00 \uBC84\uD2BC\uC73C\uB85C \uD68C\uC6D0\uC744 \uB4F1\uB85D\uD558\uC138\uC694.", role === "admin" ? " \uCD94\uAC00\uD55C \uD68C\uC6D0\uC740 \uAD00\uB9AC \uD0ED\uC5D0\uC11C \uAC15\uC0AC\uC5D0\uAC8C \uBC30\uC815\uD569\uB2C8\uB2E4." : role === "trainer" ? " \uAD00\uB9AC\uC790\uAC00 \uBC30\uC815\uD55C \uD68C\uC6D0\uB3C4 \uC5EC\uAE30\uC5D0 \uB098\uD0C0\uB0A9\uB2C8\uB2E4." : ""));
@@ -2312,7 +2427,7 @@ function App() {
     }
   };
   const dot = mode === "local" ? "" : sync.state === "error" ? " bad" : sync.state === "saving" || sync.state === "loading" ? " busy" : " ok";
-  return /* @__PURE__ */ React.createElement(Store.Provider, { value: ctx }, /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT"))), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("button", { className: "icon acct" + dot, "aria-label": "\uACC4\uC815\uACFC \uC800\uC7A5 \uC0C1\uD0DC", onClick: () => setAcct(true) }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS.member }))))), adding && role !== "member" && /* @__PURE__ */ React.createElement("div", { className: "addbar" }, /* @__PURE__ */ React.createElement("input", { id: "new-name", placeholder: "\uC0C8 \uD68C\uC6D0 \uC774\uB984", autoFocus: true, value: newName, onChange: (e) => setNewName(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addMember }, "\uCD94\uAC00"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => {
+  return /* @__PURE__ */ React.createElement(Store.Provider, { value: ctx }, /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("header", { className: "top" }, /* @__PURE__ */ React.createElement("div", { className: "brand" }, /* @__PURE__ */ React.createElement("img", { src: window.TEMPT_MARK, alt: "", className: "mark" }), /* @__PURE__ */ React.createElement("div", { className: "wm" }, /* @__PURE__ */ React.createElement("b", null, "TEMPT"), /* @__PURE__ */ React.createElement("small", null, "PILATES & PT"))), /* @__PURE__ */ React.createElement("div", { className: "row" }, srv && srv.master && /* @__PURE__ */ React.createElement("button", { className: "actchip", id: "act-chip", onClick: () => setMenu(true) }, srv.centerNames[srv.act] || "\uC13C\uD130", " \uAD00\uB9AC\uC790"), /* @__PURE__ */ React.createElement("button", { className: "icon acct" + dot, "aria-label": "\uACC4\uC815\uACFC \uC800\uC7A5 \uC0C1\uD0DC", onClick: () => srv && srv.master ? setMenu(!menu) : setAcct(true) }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: ICONS.member })))), menu && srv && srv.master && /* @__PURE__ */ React.createElement(MasterMenu, { srv, onAccount: () => setAcct(true), onClose: () => setMenu(false) })), adding && role !== "member" && /* @__PURE__ */ React.createElement("div", { className: "addbar" }, /* @__PURE__ */ React.createElement("input", { id: "new-name", placeholder: "\uC0C8 \uD68C\uC6D0 \uC774\uB984", autoFocus: true, value: newName, onChange: (e) => setNewName(e.target.value), onKeyDown: (e) => e.key === "Enter" && addMember() }), /* @__PURE__ */ React.createElement("button", { className: "btn", onClick: addMember }, "\uCD94\uAC00"), /* @__PURE__ */ React.createElement("button", { className: "btn ghost small", onClick: () => {
     setAdding(false);
     setNewName("");
   } }, "\uCDE8\uC18C")), mode === "local" && /* @__PURE__ */ React.createElement("div", { className: "notice" }, "\uC9C0\uAE08\uC740 \uC774 \uAE30\uAE30\uC5D0\uB9CC \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB2E4\uB978 \uAE30\uAE30\uC5D0\uC11C\uB3C4 \uBCF4\uB824\uBA74 ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => cfg ? goLogin() : setAcct(true) }, cfg ? "\uB85C\uADF8\uC778" : "\uC11C\uBC84 \uC5F0\uACB0"), "\uD558\uC138\uC694.", db.sample && /* @__PURE__ */ React.createElement(React.Fragment, null, " \uC544\uB798\uB294 \uC608\uC2DC \uD68C\uC6D0 2\uBA85\uC758 \uC0D8\uD50C\uC785\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => setDB({ sample: false, activeId: null, members: [], measurements: [], sessions: [], exercises: db.exercises || DEFAULT_EXERCISES }) }, "\uBAA8\uB450 \uBE44\uC6B0\uAE30"))), mode === "server" && sync.state === "error" && /* @__PURE__ */ React.createElement("div", { className: "notice bad" }, sync.msg, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: flush }, "\uB2E4\uC2DC \uC800\uC7A5")), toast && /* @__PURE__ */ React.createElement("div", { className: "toast", role: "status" }, toast), /* @__PURE__ */ React.createElement("main", { className: "main" }, body(), /* @__PURE__ */ React.createElement("p", { className: "foot" }, "\uC774 \uC571\uC758 \uC218\uCE58\uB294 \uACF5\uC778 \uACF5\uC2DD\uC5D0 \uB530\uB978 \uCD94\uC815\uCE58\uC774\uBA70 \uC758\uB8CC\uC801 \uC9C4\uB2E8\uC744 \uB300\uC2E0\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", id: "foot-refs", onClick: () => setRefs({ ids: null }) }, "\uADFC\uAC70\xB7\uB370\uC774\uD130 \uAD6C\uC870 \uBCF4\uAE30"), mode === "local" && /* @__PURE__ */ React.createElement(React.Fragment, null, " ", /* @__PURE__ */ React.createElement("button", { className: "linkbtn", onClick: () => {
